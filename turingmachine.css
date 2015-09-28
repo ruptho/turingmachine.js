@@ -36,6 +36,10 @@
 @media all {
   /* ============================== GENERIC ============================== */
 
+
+  *{
+    box-sizing: border-box;
+}
   body {
     background-color: #CEE2BF;
     font-family: "Cala-Light", Helvetica, sans-serif;
@@ -136,6 +140,7 @@
   {
     position: fixed;
     top: 80px;
+    bottom:80px;
     left: calc(50% - 350px);
     width: 660px;
     min-height: 300px;
@@ -146,9 +151,30 @@
     display: none;
   }
 
-  #overlay_text textarea {
-    width: 80%;
-    font-size: 0.9em;
+  #overlay_text h4,
+  #overlay_text p
+  {
+    margin:0 0 10px 0;
+  }
+
+  #overlay_text .input-text {
+    display: block;
+    padding: 10px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: 80px;
+    margin:0;
+
+  }
+  #overlay_text .input-text textarea{
+    font-family: monospace;
+    font-size:11px;
+    display:block;
+    width:100%;
+    height:100%;
+    line-height: 1.4em;
   }
 
   #title h1 {
