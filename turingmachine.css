@@ -48,6 +48,11 @@
     min-width: 750px;
   }
 
+  /*change cursor to pointer also for buttons without href attribute (eg. import button)*/
+  a{
+    cursor: pointer;
+  }
+
   body > section {
     width: 700px;
   }
@@ -115,7 +120,7 @@
 
   #overlay
   {
-    position: absolute;
+    position: fixed;
     left: 0;
     top: 0;
     right: 0;
@@ -129,7 +134,7 @@
 
   #overlay_text
   {
-    position: absolute;
+    position: fixed;
     top: 80px;
     left: calc(50% - 350px);
     width: 660px;
@@ -180,6 +185,7 @@
 
   .turingmachine,
   .turingmachine_meta,
+  .turingmachine_desc,
   .turingmachine_data
   {
     background-color: #BDC5AD;
