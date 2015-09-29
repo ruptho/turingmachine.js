@@ -94,6 +94,12 @@
     border-bottom: none;
   }
 
+  button, select{
+    line-height: 1.2em;
+    display:inline-block;
+    cursor:pointer;
+  }
+
   .then {
     padding-left: 30px;
   }
