@@ -967,6 +967,8 @@ var AnimatedTuringMachine = function (program, tape, final_states,
 
   };
 
+
+  // @method AnimatedTuingMachine.readTransitionTable: load for testing system
   this.readTransitionTable = function () {
     return this.getProgram().toJSON();
   };
