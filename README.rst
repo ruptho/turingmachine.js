@@ -29,7 +29,7 @@ Then open the link provided by python for the local webserver.
 Development
 -----------
 
-You need Node.js (with npm) and Grunt (install with `npm install -g grunt-cli`).
+You need Node.js (with npm) and Grunt (install with ``npm install -g grunt-cli``).
 
 At first, install needed dependencies::
 
