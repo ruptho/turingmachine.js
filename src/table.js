@@ -3,21 +3,15 @@ angular.module('turing', [])
         return {
             restrict: 'C',
             scope: true,
-            templateUrl: 'table.html',
+            templateUrl: '../table.html',
             link: function ($scope, element, attr) {
 
                 $scope.data = []
                 $scope.inputs = [];
                 $scope.states = [];
 
-                /*$scope.$watch(function () {
-                    return JSON.stringify($scope.data);
-                }, function (value) {
-
-                });*/
-
                 $scope.update=function(){
-                    console.log("refresh", $scope.data);
+                    console.log("update machine from table");
                     window.app.tm().getProgram().clear();
                     window.app.tm().getProgram().fromJSON($scope.data);
                 }
@@ -29,17 +23,17 @@ angular.module('turing', [])
                     $scope.states = [];
                     $timeout(function () {
                         $scope.data = window.app.tm().getProgram().toJSON();
-                        console.log("loaded", $scope.data);
+                        console.log("updated table");
                         init();
                     });
                 }
 
                 //ext api
                 window.loadNewTable = function () {
+                    //use timeout to safe propagation of values to angular
                     $timeout(function(){
                         $scope.load();
                     })
-
                 }
 
                 $scope.addInput = addInput;
@@ -159,7 +153,6 @@ angular.module('turing', [])
                             setElementAt(state, input, data);
                         }
                     }
-                    console.log("updateElement");
                     $scope.update();
                 }
 
@@ -275,16 +268,7 @@ angular.module('turing', [])
                 scope.$watchCollection('data', function (data) {
                     if (data.length === 3 && !!data[0] && !!data[1] && !!data[2]) {
                         scope.callback(scope.row, scope.column, data);
-
-
-                        /* if (!scope.stateEditor) {
-                         scope.callback(scope.row, scope.column, data);
-                         } else {
-                         scope.stateEditor = data;
-                         }*/
                     }
-
-
                 })
             }
         }

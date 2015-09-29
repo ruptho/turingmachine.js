@@ -965,76 +965,8 @@ var AnimatedTuringMachine = function (program, tape, final_states,
     for (var i = 0; i < ui_final_states.length; i++)
       require(ui_final_states[i].equals(tm_final_states[i]));
 
-    // verify 'transition table'
-    //throw new Error("TODO");
   };
 
-  // @function AnimatedTuringMachine.readTransitionTable:
-  //   read the whole content of the UI transition table
-  this.readTransitionTable = function () {
-    var data = [];
-    ui_data.find(".transition_table tbody tr").each(function () {
-      var row = [];
-      row.push($(this).find(".tt_read").val());
-      row.push($(this).find(".tt_from").val());
-      var to = [];
-      to.push($(this).find(".tt_write").val());
-      to.push($(this).find(".tt_move").val());
-      to.push($(this).find(".tt_to").val());
-      row.push(to);
-
-      if (row[0] === '' && row[1] === '' && row[2][0] === '' &&
-        row[2][1] === 'Stop' && row[2][2] === '')
-        return;
-
-      data.push(row);
-    });
-    return data;
-  };
-
-  // @function AnimatedTuringMachine.addNewTransitionTableRow:
-  //   append a new empty row to the transition table
-  this.addNewTransitionTableRow = function () {
-    var last = ui_data.find(".transition_table tbody tr").last().clone();
-    last.removeClass("nondeterministic deterministic");
-    last.appendTo(".transition_table tbody");
-    this.writeTransitionTableRow();
-  };
-
-  // @function AnimatedTuringMachine.writeTransitionTableRow:
-  //   write given vals (default: empty) to a transition table row (default: last)
-  this.writeTransitionTableRow = function (vals, row) {
-    vals = def(vals, ['', '', ['', 'Stop', '']]);
-    row = def(row, ui_data.find(".transition_table tbody tr").last());
-    require(vals.length === 3);
-
-    row.find(".tt_read").val(vals[0]);
-    row.find(".tt_from").val(vals[1]);
-    row.find(".tt_write").val(vals[2][0]);
-    row.find(".tt_move").val(vals[2][1]);
-    row.find(".tt_to").val(vals[2][2]);
-  };
-
-  // @function AnimatedTuringMachine.isLastTransitionTableRowEmpty:
-  //   is the last transition table row empty?
-  this.isLastTransitionTableRowEmpty = function () {
-    var last = ui_data.find(".transition_table tbody tr").last();
-    return last.find(".tt_read").val() === '' &&
-           last.find(".tt_from").val() === '' &&
-           last.find(".tt_write").val() === '' &&
-           last.find(".tt_move").val() === 'Stop' &&
-           last.find(".tt_to").val() === '';
-  };
-
-  // @function AnimatedTuringMachine.clearTransitionTableRows:
-  //   remove all rows from the transition table and keep one empty one
-  this.clearTransitionTableRows = function () {
-    ui_data.find(".transition_table tbody tr").slice(1).remove();
-    ui_data.find(".transition_table tbody td").each(function () {
-      $(this).find(".tt_read, .tt_from, .tt_write, .tt_to").val("");
-      $(this).find(".tt_move").val("Stop");
-    });
-  };
 
   // API
 
@@ -1297,62 +1229,6 @@ var AnimatedTuringMachine = function (program, tape, final_states,
         self.addNewTransitionTableRow();
         var prelast = ui_data.find(".transition_table tbody tr").eq(-2);
         self.writeTransitionTableRow(row, prelast);
-      } catch (e) {
-        console.error(e);
-        self.alertNote(e.message);
-      }
-    });
-
-    $(document).on("change", ".transition_table", function () {
-      try {
-        // if (!last row empty) add new row
-        if (!self.isLastTransitionTableRowEmpty())
-          self.addNewTransitionTableRow();
-
-        // if (final state used) warn user that it won't execute
-        var row = 0;
-        $(this).find("tbody tr").each(function () {
-          var state_name = $(this).find(".tt_from").val();
-          if (self.isAFinalState(state(state_name))) {
-            self.alertNote("Line " + row + " would not executed, "
-              + "because a final state '" + state_name + "' will be reached, "
-              + "but not executed");
-              $(this).addClass("wontexecute");
-          } else {
-            $(this).removeClass("wontexecute");
-          }
-
-          row += 1;
-        });
-
-        // if (another row with same input exists), declare as nondeterministic
-        var known = [];
-        ui_data.find(".transition_table tbody tr").each(function (row_id) {
-          var from = [$(this).find(".tt_read").val(), $(this).find(".tt_from").val()];
-
-          var search = [];
-          for (var i = 0; i < known.length; i++)
-            if (from[0] === known[i][0] && from[1] === known[i][1] && from[0] && from[1])
-              search.push(i);
-
-          if (search.length > 0) {
-            self.alertNote("Nondeterministic behavior in rows " + search.join(", ")
-              + " and " + row_id + ".");
-            $(this).addClass("nondeterministic").removeClass("deterministic");
-          } else {
-            $(this).addClass("deterministic").removeClass("nondeterministic");
-            known.push(from);
-          }
-        });
-
-        // update actual table in ATM
-        self.getProgram().fromJSON(self.readTransitionTable());
-
-        // is it still an undefined instruction?
-        self._updateStateInUI(self.getState(), self.finalStateReached(),
-          self.undefinedInstruction(), self.getTape().read());
-
-        self.alertNote("Transition table updated!");
       } catch (e) {
         console.error(e);
         self.alertNote(e.message);
@@ -1684,13 +1560,7 @@ var AnimatedTuringMachine = function (program, tape, final_states,
     var fs = this.getFinalStates().map(toStr).join(", ");
     ui_data.find(".final_states").val(fs);
 
-    // write 'transition table'
-    this.clearTransitionTableRows();
-    var prg = this.toJSON()['program'];
-    for (var row = 0; row < prg.length; row++) {
-      this.writeTransitionTableRow(prg[row]);
-      this.addNewTransitionTableRow();
-    }
+    window.loadNewTable();
   };
 
   // @method AnimatedTuringMachine.fromJSON: Import object state from JSON dump

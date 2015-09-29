@@ -499,6 +499,1008 @@ function SyntaxException(msg)
 }
 
 
+// ---------------------------- TuringManager -----------------------------
+
+// A turing market holds JSON data of various markets, where the JSON
+// represents programs, testcases, etc
+
+var TuringManager = function (default_market, markets, ui_notes, ui_tm, ui_meta, ui_data) {
+  // @member TuringManager.default_market: the market used per default
+
+  // UI elements
+  var ui_programs = ui_meta.find("select.example");
+  var ui_testcases = ui_meta.find("select.testcase");
+  var ui_transitiontable = ui_data.find(".transition_table");
+
+  // @callback programLoading(program)
+  //   [invoked when the market is about to load]
+  // @callback programVerified(program, verification_report)
+  //   [invoked whenever the market is verified]
+  // @callback programReady(program, data)
+  //   [invoked whenever the validated market is available]
+  // @callback programActivated(program, data)
+  //   [invoked whenever TuringManager.activateProgram(program) was invoked]
+  // @callback testcaseActivated(testcase, testcase_data)
+  //   [invoked whenever TuringManager.activateTestcase(testcase) was invoked]
+
+  // @member TuringManager.events: EventRegister for events of this object
+  var events = new EventRegister([
+    'programLoading', 'programVerified', 'programReady',
+    'programActivated', 'testcaseActivated'
+  ]);
+
+  // @member TuringManager.programs: The actual loaded markets
+  var programs = {};
+
+  // @member TuringManager.auto_activate_program:
+  //    markets to activate after calling activateWhenReady with a program
+  var autoactivate_program = {};
+
+  // @member TuringManager.auto_activate_testcase:
+  //    markets to activate after calling activateWhenReady with a testcase
+  var autoactivate_testcase = {};
+
+  // @member TuringManager.last_activated: last activated program
+  var last_activated = '';
+
+  // @member TuringManager.loading_timeout: maximum loading timeout
+  var loading_timeout = 7000;
+
+
+  // @method TuringManager._normId: Split an identifier
+  this._normId = function (id) {
+    // TODO: fails if testcase name contains "/"
+    require(id, "Market identifier must not be undefined");
+    if (id.indexOf(':') === -1 && id.indexOf('/') === -1)
+      return [default_market, id, undefined];
+    else if (id.indexOf(':') === -1) {
+      var parts = id.split('/');
+      return [default_market, parts[0], parts[1]];
+    } else if (id.indexOf('/') === -1) {
+      var parts = id.split(':');
+      return [parts[0], parts[1], undefined];
+    } else {
+      var parts1 = id.split(':');
+      var parts2 = parts1[1].split('/');
+      return [parts1[0], parts1[0], parts1[1]];
+    }
+  };
+
+  // @method TuringManager.addEventListener: event listener definition
+  this.addEventListener = function (evt, callback, how_often) {
+    return events.add(evt, callback, how_often);
+  };
+
+  // @method TuringManager.triggerEvent: trigger event
+  this.triggerEvent = function (evt) {
+    return events.trigger.apply(this, arguments);
+  };
+
+  // @method TuringManager.loaded: Was given program loaded?
+  this.loaded = function (program_id) {
+    var id = this._normId(program_id).slice(0, 2).join(":");
+    return programs[id] !== undefined;
+  };
+
+  // @method TuringManager.get: Get the defined program (or undefined)
+  this.get = function (program_id) {
+    var id = this._normId(program_id).slice(0, 2).join(":");
+    return programs[id];
+  };
+
+  // @method TuringManager.get: Get the title of the last activated program (or null)
+  this.getActivated = function () {
+    if (this.last_activated)
+      return this.last_activated;
+    else
+      return null;
+  };
+
+  // @method TuringManager.add: Synchronously add a market
+  this.add = function (program_id, data) {
+    var normalized = this._normId(program_id);
+    var id = normalized.slice(0, 2).join(":");
+    require(normalized[2] === undefined, "ID must not refer to a testcase");
+
+    this.triggerEvent('programLoading', id);
+    var report = verifyProgram(data);
+    this.triggerEvent('programVerified', id, report);
+    if (report)
+      return false;
+
+    programs[id] = data;
+    this.triggerEvent('programReady', id, data);
+
+    if (autoactivate_program[id])
+      this.activateProgram(id);
+    else if (autoactivate_testcase[id] && autoactivate_testcase[id].length > 0)
+      for (var i = 0; i < autoactivate_testcase[id].length; i++)
+        this.activateTestcase(autoactivate_testcase[id][i]);
+  };
+
+  // @method TuringManager.load: Asynchronously add a market
+  this.load = function (program_id) {
+    var normalized = this._normId(program_id);
+    var id = normalized.slice(0, 2).join(":");
+    var market = normalized[0];
+    var program = normalized[1];
+    var self = this;
+
+    if (programs[id] !== undefined) {
+      console.warn(id + " already loaded");
+      return;
+    }
+
+    this.triggerEvent('programLoading', id);
+
+    var loaded = false;
+    setTimeout(function () {
+      if (!loaded)
+        console.error("seems like " + id + " was not loaded in time");
+    }, loading_timeout);
+
+    $.get("" + markets[market] + program + ".json", function (data) {
+      loaded = true;
+      console.info("program " + id + " was loaded");
+
+      // verify data
+      var report = verifyProgram(data);
+      self.triggerEvent('programVerified', id, report);
+      if (report) {
+        console.warn("Program " + id + " is not correctly formatted");
+        console.debug(report);
+        return;
+      }
+
+      // set ready
+      programs[id] = data;
+      self.triggerEvent('programReady', id, data);
+
+      if (autoactivate_program[id])
+        self.activateProgram(id);
+      else if (autoactivate_testcase[id] && autoactivate_testcase[id].length > 0)
+        for (var i = 0; i < autoactivate_testcase[id].length; i++)
+          self.activateTestcase(autoactivate_testcase[id][i]);
+    }, "json");
+  };
+
+  // @method TuringManager.activateWhenReady: The next time the given market
+  //   is available, activate it
+  this.activateWhenReady = function (program_id) {
+    var normalized = this._normId(program_id);
+    var program_id = normalized.slice(0, 2).join(":");
+    var testcase_id = normalized.slice(0, 3).join(":");
+
+    if (normalized[2] === undefined) {
+      // refers to program
+      if (programs[program_id] !== undefined)
+        this.activateProgram(program_id);
+      else
+        autoactivate_program[program_id] = true;
+    } else {
+      // refers to testcase
+      if (programs[program_id] !== undefined)
+        this.activateTestcase(testcase_id);
+      else
+        autoactivate_testcase[program_id].push(testcase_id);
+    }
+  };
+
+  // @method TuringManager.activateProgram: Activate a given program
+  //   meaning a programActivated event will be fired and the
+  //   program JSON will be passed over
+  this.activateProgram = function (program_id) {
+    var normalized = this._normId(program_id);
+    var id = normalized.slice(0, 2).join(":");
+    require(normalized[2] === undefined,
+      "Market ID must refer to program, not testcase");
+
+    require(programs[id] !== undefined, "Program " + id
+      + " is not yet available");
+
+    this.triggerEvent('programActivated', id, programs[id]);
+    autoactivate_program[id] = false;
+  };
+
+  // @method TuringManager.activateTestcase: Activate a given testcase
+  //   meaning a testcaseActivated event will be fired and the
+  //   testcase JSON will be passed over
+  this.activateTestcase = function (testcase_id) {
+    var normalized = this._normId(testcase_id);
+    var program_id = normalized.slice(0, 2).join(":");
+    var testcase_id = normalized.slice(0, 3).join(":");
+    require(normalized[2] !== undefined,
+      "Market ID must refer to testcase, not program");
+
+    require(programs[program_id] !== undefined, "Program " + program_id
+      + " is not yet available");
+
+    var data = undefined;
+    for (var i = 0; i < programs[program_id]['testcases']; i++)
+      if (programs[program_id]['testcases'][i]['title'] === normalized[2])
+        data = programs[program_id]['testcases'][i];
+    require(data !== undefined, "Testcase " + testcase_id
+      + " not found in program " + program_id);
+
+    this.triggerEvent('testcaseActivated', testcase_id, data);
+    autoactivate_testcase[program_id] = autoactivate_testcase[program_id].filter(
+      function (v) { return v !== testcase_id; }
+    );
+  };
+
+  var self = this;
+  this.addEventListener('programActivated', function (program_id, data) {
+    self.last_activated = program_id;
+  });
+};
+
+
+
+// ------------------------------- Foswiki --------------------------------
+
+// - read: read turingmachine from userinput text
+// - write: write turingmachine to text string
+
+var foswiki = {};
+
+foswiki.removeMarkup = function (v) {
+  v = v.trim();
+  v = v.replace(/(\s|^)\*(\S.*?\S|\S)\*(\s|$)/, "$1$2$3");
+  v = v.replace(/(\s|^)__(\S.*?\S|\S)__(\s|$)/, "$1$2$3");
+  v = v.replace(/(\s|^)_(\S.*?\S|\S)_(\s|$)/, "$1$2$3");
+  v = v.replace(/(\s|^)==(\S.*?\S|\S)==(\s|$)/, "$1$2$3");
+  v = v.replace(/(\s|^)=(\S.*?\S|\S)=(\s|$)/, "$1$2$3");
+  v = v.replace(/<(\w|\/)[^>]*?>/, "");
+  return v.trim();
+};
+
+foswiki.exc = function (msg, lineno, col) {
+  msg = "[foswiki] " + msg;
+  if (typeof lineno !== 'undefined' && typeof col !== 'undefined')
+    msg += " [lineno " + (lineno + 1) + ", column " + col + "]";
+  else if (typeof lineno !== 'undefined')
+    msg += " [lineno " + (lineno + 1) + "]";
+  else if (typeof col !== 'undefined')
+    require(false, "Buggy call of foswiki.exc");
+  throw new SyntaxException(msg);
+};
+
+foswiki.readDefinitionLine = function (line, lineno) {
+  var normalize = foswiki.removeMarkup;
+
+  var m = line.match(/( +)\$ ([^:]+?): (.*)/);
+  if (m === null)
+    return null;
+  if (m[1].length !== 3)
+    throw new SyntaxException("Foswiki definition list items "
+      + "must start with exactly 3 spaces! Error on line " + lineno);
+
+  var key = normalize(m[2]);
+  var value = normalize(m[3]);
+
+  if (key.match(/name/i))
+    return { 'machine name': value };
+  else if (key.match(/final state/i))
+    return {
+      'final states': value.split(",").map(normalize)
+        .filter(function (v) { return Boolean(v); })
+    };
+  else if (key.match(/state/i))
+    return { 'initial state': value };
+  else if (key.match(/tape/i))
+    return { 'tape content': m[3].trim() };
+  else if (key.match(/blank/i))
+    return { 'blank symbol': normalize(value) };
+  else if (key.match(/cursor/i)) {
+    var cursor = parseInt(value);
+    if (isNaN(cursor))
+      throw new SyntaxException("Foswiki invalid. Cursor must be integer "
+        + "(line " + line + ")");
+    return { 'cursor': cursor };
+  } else {
+    var obj = {};
+    obj[key] = value;
+    return obj;
+  }
+};
+
+foswiki.writeDefinitionLine = function (obj) {
+  require(obj['machine name'], "machine name must not be empty");
+  require(obj['final states'], "final states must be given");
+  require(obj['initial state'], "initial state must not be given");
+  require(obj['tape content'], "tape content must not be empty");
+
+  return "   $ __Machine name__: " + obj['machine name'] + "\n"
+       + "   $ __Final states__: " + obj['final states'] + "\n"
+       + "   $ __Initial state__: " + obj['initial state'] + "\n"
+       + "   $ __Tape content__: " + obj['tape content'] + "\n";
+};
+
+foswiki.readTable = function (tokenstream) {
+  // expect one line per tokenstream element
+  //   { 'line': N, 'text': line surrounded by "|" }
+  var colsep = "|";
+  var table = [];
+  var columns = -1;
+  var columns_origin = 0;
+
+  if (tokenstream.length < 1)
+    foswiki.exc("No row found in foswiki table");
+  for (var t = 0; t < tokenstream.length; t++) {
+    require(!isNaN(parseInt(tokenstream[t]['line'])));
+    require(tokenstream[t]['line'] !== undefined);
+
+    var lineno = tokenstream[t]['line'];
+    var cols = tokenstream[t]['text'].split(colsep);
+
+    if (cols.length < 2)
+      foswiki.exc("No columns found in table row", lineno);
+
+    if (columns === -1) {
+      columns = cols.length;
+      columns_origin = lineno;
+    }
+    if (columns !== cols.length)
+      foswiki.exc("Inconsistent number of columns in table rows. " +
+        columns + " columns found in line " + (columns_origin + 1) + ". " +
+        "Got unexpected " + cols.length + " columns in line " +
+        (lineno + 1));
+
+    var onerow = { 'line': lineno, 'data': [] };
+    for (var col = 0; col < cols.length; col++) {
+      if (col === 0 && cols[col].trim() !== "")
+        foswiki.exc("Table rows must start with |", lineno);
+      if (col === cols.length - 1 && cols[col].trim() !== "")
+        foswiki.exc("Table rows must end with |", lineno);
+
+      if (col > 0 && col !== cols.length - 1)
+        onerow['data'].push(cols[col]);
+    }
+    table.push(onerow);
+  }
+
+  return table;
+};
+
+foswiki.readTransitionTriple = function (text)
+{
+  if (text.trim() === "" || text.trim() === "..." || text.trim() === "…")
+    return null;
+  var vals = text.split(" - ").map(foswiki.removeMarkup);
+  if (vals[0].trim() === "" && vals[1].trim() === "" &&
+    vals[2].trim() === "")
+    return null;
+  if (vals.length !== 3)
+    foswiki.exc("Transition triple must contain "
+      + "3 hyphen-separated values but I got: " + text);
+
+  return [vals[0], vals[1], vals[2]];
+}
+
+foswiki.readProgram = function (tokenstream)
+{
+  var table = foswiki.readTable(tokenstream);
+
+  var symbols = [];
+  var states = [];
+  var program = [];
+
+  for (var r = 0; r < table.length; r++) {
+    for (var c = 0; c < table[r]['data'].length; c++) {
+      var content = table[r]['data'][c];
+      var lineno = table[r]['line'];
+
+      // read symbol
+      if (r === 0 && c > 0) {
+        var n = foswiki.removeMarkup(content);
+        if ($.inArray(n, symbols) === -1)
+          symbols.push(n);
+        else {
+          var first = 0;
+          for (var i = 0; i < symbols.length; i++)
+            if (symbols[i] === n)
+              first = i;
+          foswiki.exc("Symbol '" + n + "' used twice as read symbol "
+            + "(columns " + first + " and " + c + ")");
+        }
+      }
+      // read state
+      if (c === 0 && r > 0) {
+        var n = foswiki.removeMarkup(content);
+        if ($.inArray(n, states) === -1)
+          states.push(n);
+        else {
+          var first = 0;
+          for (var i = 0; i < states.length; i++)
+            if (states[i] === n)
+              first = i;
+          foswiki.exc("State '" + n + "' used twice as current state "
+            + "(rows " + first + " and " + r + ")");
+        }
+      }
+
+      // transition triple
+      if (c > 0 && r > 0) {
+        var tr_cell = foswiki.readTransitionTriple(content);
+        if (tr_cell)
+          program.push([symbols[c - 1], states[r - 1],
+            [tr_cell[0], tr_cell[1], tr_cell[2]]])
+      }
+    }
+  }
+
+  return program;
+};
+
+foswiki.writeProgram = function (prg) {
+  var justify = function (text, size, bold) {
+    if (typeof size === 'undefined')
+      size = 25;
+    else if (isNaN(parseInt(size)))
+      throw new Error("justify() only accepts integers as size parameter");
+    else
+      size = parseInt(size);
+
+    if (typeof text === 'undefined')
+      return repeat(" ", size);
+    var chars = size - (bold ? 2 : 0) - text.toString().length;
+    if (chars < 0)
+      chars = 0;
+    var t = text.toString();
+    return (bold ? "*" + t + "*" : t) + repeat(" ", chars);
+  };
+
+  // retrieve possible symbols and states to start with
+  var from_symbols = prg.getFromSymbols();
+  var from_states = prg.getFromStates();
+  var from_symbols_json = from_symbols.toJSON();
+  var from_states_json = from_states.toJSON();
+
+  var j = function (v) { return justify(v); };
+  var text = "| " + j("") + " | " + from_symbols.toJSON().map(j).join(" | ") + " |\n";
+
+  for (var j = 0; j < from_states_json.length; j++) {
+    var from_state = from_states_json[j];
+    var cols = [];
+
+    for (var i = 0; i < from_symbols_json.length; i++) {
+      var from_symb = from_symbols_json[i];
+      // TODO: normalization functions
+      var instr = prg.get(symbol(from_symb), state(from_state));
+
+      if (!instr)
+        cols.push(justify(""));
+      else
+        cols.push(justify(instr.toJSON().join(" - ")));
+    }
+
+    text += "| " + justify(from_state) + " | " + cols.join(" | ") + " |\n";
+  }
+
+  return text;
+};
+
+foswiki.read = function (tm, text, symbol_norm_fn, state_norm_fn) {
+  require(tm !== undefined, "TM must be given for foswiki import");
+  require(text !== undefined, "Foswiki text must be given for foswiki import");
+  if (typeof text !== 'string' || text.trim().length === 0)
+    foswiki.exc("Cannot import from empty text");
+
+  var rowsep = "\n";
+  var lines = text.split(rowsep);
+
+  var table_here = null;
+  var table = [];
+  var definitions = {};
+
+  // read it line-by-line
+  for (var l = 0; l < lines.length; l++) {
+    var line = lines[l];
+    if (line.match(/^\s*$/))
+      continue;
+
+    // mode transition
+    if (line.trim()[0] === '|' && (table_here === null || table_here === true)) {
+      table.push({ 'line': l, 'text': line });
+      table_here = true;
+    } else if (line.substr(0, 5) === '   $ ') {
+      if (table_here === true)
+        table_here = false;
+      var result = foswiki.readDefinitionLine(line, l);
+      for (var i in result)
+        definitions[i] = result[i];
+    }
+  }
+
+  if (table.length === 0)
+    foswiki.exc("No transition table found after reading "
+      + lines.length + " lines");
+
+  // load program to TM
+  var transition_table = foswiki.readProgram(table);
+  tm.getProgram().fromJSON(transition_table);
+
+  // load definitions to TM
+  if ('machine name' in definitions)
+    tm.setMachineName(definitions['machine name']);
+  if ('final states' in definitions)
+    tm.setFinalStates(definitions['final states'].map(function (v) {
+      return state(v, state_norm_fn);
+    }));
+  if ('initial state' in definitions)
+    tm.setState(state(definitions['initial state'], state_norm_fn));
+  if ('tape content' in definitions)
+    tm.getTape().fromHumanString(definitions['tape content'], symbol_norm_fn);
+
+  // compatibility definitions, TODO: remove as time goes by
+  if ('blank symbol' in definitions)
+    tm.getTape().setBlankSymbol(symbol(definitions['blank symbol'], symbol_norm_fn));
+
+  // invalid data fixes
+  if (tm.getFinalStates().length === 0)
+    tm.addFinalState(state("End"));
+
+  // write configuration to TM
+  return null;
+};
+
+foswiki.write = function (tm) {
+  require(tm && tm.getState, "tm must not be empty");
+
+  // metadata header
+  var text = foswiki.writeDefinitionLine({
+    'machine name': tm.getMachineName(),
+    'initial state': tm.getState().toString(),
+    'final states': tm.getFinalStates()
+      .map(function (v) {
+        require(v.toString().indexOf(",") === -1, "final states must not contain commas");
+        return v.toString();
+      })
+      .join(","),
+    'tape content': tm.getTape().toHumanString()
+  });
+
+  text += "\n";
+
+  // transition table
+  text += foswiki.writeProgram(tm.getProgram());
+
+  return text;
+};
+
+// ---------------------- TuringMarket verification -----------------------
+
+// verifyProgram: Verify correctness of market's program data
+var verifyProgram = function (dat) {
+  // map
+  //   'title'          required, string
+  //   'description'    optional, array of strings/maps, default []
+  //   'version'        required, string
+  //   'tape'           required, map
+  //       'blank'         optional, string, default "0"
+  //       'offset'        optional, integer, default 0
+  //       'cursor'        optional, integer, default -1
+  //       'data'          required, array of strings, len>=0
+  //   'program'        optional, array of homogeneous elements, default []
+  //       homogeneous elements: array of 5 strings
+  //           [3] satisfies       is choice from ["LEFT", "RIGHT", "STOP"]
+  //   'state'          required, string
+  //   'final_states'   required, array of strings, len>=1
+  //   'testcases'      optional, array of homogeneous elements, len>=0
+  //       homogeneous elements: map
+  //            'name'             required, string, len>=3
+  //            'input'            required, map
+  //                 'tape'              required, same layout as above
+  //                 'state'             required, string
+  //            'output'           required, len>=1
+  //                 'state'             optional, string
+  //                 'tapecontent'       optional, array of strings, len>=0
+  //                 'cursorposition'    optional, integer
+
+  // output['state'] will be satisfied if and only if
+  //   the final state equals output['state']
+  //   hence output['state'] must be declared as final state
+  // output['tapecontent'] will be satisfied if and only if
+  //   if the output['tapecontent'] equals tape values array (with blank symbols stripped from left and right)
+  // output['cursorposition'] will be satisfied if and only if
+  //   if the final cursor position matches the index of the cursor in output['tapecontent']
+  //   hence output['cursorposition'] requires definition of output['tapecontent']
+
+  var title_schema = { 'type': 'string', 'minLength': 3 };
+  var description_schema = {
+    'type': 'array',
+    'minItems': 0,
+    'items': {
+      'oneOf': [{ 'type': 'string' }, { 'type': 'object' }]
+    }
+  };
+  var version_schema = { 'type': 'string', 'minLength': 3 };
+  var tape_schema = {
+    'type': 'object',
+    'properties': {
+      'blank': { 'type': 'string', 'default': "0" },
+      'offset': { 'type': 'integer', 'default': 0 },
+      'cursor': { 'type': 'integer', 'default': -1 },
+      'data': { 'type': 'array', 'minItems': 0, 'items': { 'type': 'string' } }
+    },
+    'additionalProperties': false,
+    'required': ['data']
+  };
+  var program_schema = {
+    'type': 'array',
+    'minItems': 0,
+    'items': {
+      'type': 'array',
+      'minItems': 5,
+      'maxItems': 5,
+      'items': [
+        { 'type': 'string' },
+        { 'type': 'string' },
+        { 'type': 'string' },
+        { 'type': 'string', 'pattern': '^(LEFT|RIGHT|STOP)$' },
+        { 'type': 'string' }
+      ]
+    },
+    'uniqueItems': true
+  };
+  var state_schema = { 'type': 'string', 'minLength': 1 };
+  var final_states_schema = { 'type': 'array', 'minItems': 1, 'items': { 'type': 'string' } };
+  var testcase_schema = {
+    'type': 'array',
+    'minItems': 0,
+    'items': {
+      'type': 'object',
+      'properties': {
+        'name': { 'type': 'string', 'minLength': 1 },
+        'input': {
+          'type': 'object',
+          'properties': {
+            'tape': tape_schema,
+            'state': state_schema
+          },
+          'required': ['tape', 'state'],
+          'additionalProperties': false
+        },
+        'output': {
+          'type': 'object',
+          'properties': {
+            'state': state_schema,
+            'tapecontent': { 'type': 'array', 'minItems': 0, 'items': { 'type': 'string' }},
+            'cursorposition': { 'type': 'integer' }
+          },
+          'minProperties': 1,
+          'additionalProperties': false
+        },
+      },
+      'required': ['name', 'input', 'output'],
+      'additionalProperties': false
+    }
+  };
+
+  var schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Turingmarket Schema',
+    'type': 'object',
+    'properties': {
+      'title': title_schema,
+      'description': description_schema,
+      'version': version_schema,
+      'tape': tape_schema,
+      'program': program_schema,
+      'state': state_schema,
+      'final_states': final_states_schema,
+      'testcases': testcase_schema
+    },
+    'additionalProperties': false,
+    'required': ['title', 'tape', 'state', 'final_states']
+  };
+
+  var env = jjv();
+  env.addSchema('market', schema);
+
+  return env.validate('market', dat);
+};
+
+
+
+// ------------------------------- UI-Tools -------------------------------
+
+var markup = function (element, text) {
+  var inline = function (t) {
+    var v = $("<div></div>").text(t).html();
+    v = v.replace(/(\W|^)\*((\w|_|:|\s)+)?\*(\W)/g, "$1<em>$2</em>$4");
+    v = v.replace(/\((.*?)\)\[([^\]]+)\]/g, "<a href='$2'>$1</a>");
+    return v;
+  };
+
+  var ul = null;
+  for (var i in text) {
+    if (/^\* /.exec(text[i])) {
+      if (!ul) {
+        ul = $("<ul></ul>");
+        element.append(ul);
+      }
+      ul.append($("<li></li>").html(inline(text[i].substr(2))));
+    } else {
+      element.append($("<p></p>").html(inline(text[i])));
+      ul = null;
+    }
+  }
+
+  return element;
+}
+
+// ------------------------- Application object ---------------------------
+
+var Application = function (manager, ui_tm, ui_meta, ui_data, ui_notes, ui_gear) {
+  var normalize_symbol_fn = normalizeSymbol;
+  var normalize_state_fn = normalizeState;
+
+  this.loadMarketProgram = function (data) {
+    // TODO all state() & symbol() need normalization function
+
+    var user_tape_to_userfriendly_tape = function (data) {
+      // input: { "data": ["1"], "cursor": -1, "blank": "0" }
+      // output: { "data": ["1"], "cursor": -1, "blank_symbol": "0",
+      //           "offset": 0, "history": [], "history_size": 0 }
+
+      // TODO: implement optional-default values correctly
+      return {
+        'data' : data.data,
+        'cursor': def(data.cursor, -1),
+        'blank_symbol' : def(data.blank, "0"),
+        'offset': def(data.offset, 0),
+        'history': [],
+        'history_size': 0
+      }
+    };
+
+    var user_program_to_program = function (data) {
+      // input: [['0', 'Start', '1', 'RIGHT', 'End']]
+      // output: [['0', 'Start', ['1', 'RIGHT', 'End']]]
+
+      var ret = [];
+      for (var i = 0; i < data.length; i++) {
+        ret.push([data[i][0], data[i][1],
+          [data[i][2], data[i][3], data[i][4]]]);
+      }
+      return ret;
+    };
+
+    try {
+      var tape = user_tape_to_userfriendly_tape(data['tape']);
+
+      this.tm().getTape().fromJSON(tape);
+      this.tm().setInitialTape(tape);
+      this.tm().getProgram().fromJSON(user_program_to_program(data['program']));
+      this.tm().setState(state(data['state']));
+      this.tm().setInitialState(state(data['state']));
+      this.tm().setFinalStates(data['final_states'].map(function (s) { return state(s) }));
+      this.tm().setDescriptionText(data['description']);
+      this.tm().setDescriptionTitle(data['title']);
+      this.tm().setVersion(data['version']);
+
+      this.tm().syncToUI();
+      this.tm().verifyUIsync();
+    } catch (e) {
+      console.error(e);
+      this.tm().alertNote(e.message);
+    }
+  };
+
+  this.manager = function () { return manager; };
+  this.tm = function () { return machine; };
+  this.run = function () { machine.initializeGUI(); };
+
+  var gear = new GearVisualization(ui_gear, new Queue());
+  var numbers = new NumberVisualization([0, 0, 0, 0, 0, 0, 0], ui_tm); // TODO: non-static 7
+  var machine = defaultAnimatedTuringMachine(normalize_symbol_fn,
+    normalize_state_fn, gear, numbers, ui_tm, ui_meta, ui_data, ui_notes);
+}
+
+
+// ----------------------------- Main routine -----------------------------
+
+var intro_program = {
+  "title" : "00 - Introduction",
+  "description" : [
+    "Hi! This project is all about *turingmachines*. What are turingmachines? They are a computational concept from *Theoretical Computer Science* (TCS) by Alan Turing (*\u20061912 †\u20061954). They illustrate one possible way to define computation and are as powerful as your computer. So how do they work?",
+    "Above you can see the animated turing machine with several control elements underneath. The animation consists of a tape (with bright background color) and one cursor (winded green structure). The text at the left bottom of the animation is called *current state*. You can press \"continue\" to compute the next *step*. What are steps?",
+    "At the bottom you can see a *transition table*. It defines a current situation, consisting of a read symbol and a state, and the next situation after one step has been performed. So when you press \"continue\" the program will read the symbol focused by the cursor and the current state. It will search for a line in the transition table matching those 2 values and will execute the corresponding result. The result consists of a symbol to write, a movement of the tape and a successor state.",
+    "The current program handles the following problem: Between '^' and '$' are there 0, 1 or 2 ones? Depending on the number, the final state is either Count0ones, Count1one or Count2ones.",
+    "You can edit the transition table yourself. Try it! 😊"
+  ],
+  "version" : "1.2 / 23rd of Aug 2015 / meisterluk",
+  "tape": {
+    "data": ["^", "0", "1", "0", "0", "1", "$"],
+    "cursor": 1,
+    "blank": "0"
+  },
+  "program": [
+    ["0", "Start", "0", "RIGHT", "Start"],
+    ["1", "Start", "1", "RIGHT", "Found1one"],
+    ["$", "Start", "$", "STOP", "Count0ones"],
+    ["0", "Found1one", "0", "RIGHT", "Found1one"],
+    ["1", "Found1one", "1", "RIGHT", "Found2ones"],
+    ["$", "Found1one", "$", "STOP", "Count1one"],
+    ["0", "Found2ones", "0", "RIGHT", "Found2ones"],
+    ["1", "Found2ones", "1", "STOP", "Count2ones"],
+    ["$", "Found2ones", "$", "STOP", "Count2ones"],
+  ],
+  "state" : "Start",
+  "final_states" : ["Count0ones", "Count1one", "Count2ones"],
+  "testcases" : [
+    {
+      "name": "find 0 ones in ^00000$",
+      "input": {
+          "tape": { "cursor": 1, "blank": "0", "data": ["^", "0", "0", "0", "0", "0", "$"] },
+          "state": "Start"
+      },
+      "output": { "state": "Count0ones" }
+    }, {
+      "name": "find 1 one in ^00010$",
+      "input": {
+          "tape": { "cursor": 1, "blank": "0", "data": ["^", "0", "0", "0", "1", "0", "$"] },
+          "state": "Start"
+      },
+      "output": { "state": "Count1one" }
+    }, {
+      "name": "find 2 ones in ^10010$",
+      "input": {
+          "tape": { "cursor": 1, "blank": "0", "data": ["^", "1", "0", "0", "1", "0", "$"] },
+          "state": "Start"
+      },
+      "output": { "state": "Count2ones" }
+    }, {
+      "name": "find 1 one in ^00010000000$",
+      "input": {
+          "tape": { "cursor": 1, "blank": "0", "data": ["^", "0", "0", "0", "1", "0", "0", "0", "0", "0", "0", "0", "$"] },
+          "state": "Start"
+      },
+      "output": { "state": "Count1one" }
+    }
+  ]
+};
+
+function main()
+{
+  // initialize application
+  var ui_tm = $(".turingmachine:eq(0)");
+  var ui_meta = $(".turingmachine_meta:eq(0)");
+  var ui_data = $(".turingmachine_data:eq(0)");
+  var ui_notes = $("#notes");
+  var ui_gear = ui_tm.find("#gear");
+
+  require(ui_tm.length > 0 && ui_meta.length > 0);
+  require(ui_data.length > 0 && ui_notes.length > 0 && ui_gear.length > 0);
+
+  // read configuration via URL hash
+  /// you can load additional programs via URL like:
+  ///   #programs{intro;2bit-xor}
+  var url_hash = window.location.hash.slice(1);
+  var default_market = 'local';
+  var market_matches = url_hash.match(/markets\{(([a-zA-Z0-9_-]+:.*?;)*([a-zA-Z0-9_-]+:.*?))\}/);
+  var program_matches = url_hash.match(/programs\{(([a-zA-Z0-9:_-]+;)*([a-zA-Z0-9:_-]+))\}/);
+
+  var markets = {'local': 'markets/'};  // local is always contained
+  if (market_matches) {
+    var p = market_matches[1].split(';');
+    for (var i = 0; i < p.length; i++) {
+      var q = p[i].split(':');
+      if (q[0] && q[1] && q[0] !== 'local') {
+        markets[q[0]] = q[1];
+      }
+    }
+  }
+  console.info("Markets considered: ", markets);
+
+  var programs = ['2bit-xor', '2bit-addition', '4bit-addition', 'mirroring', 'zero-writer'];
+  var count_default_programs = 5;
+  if (program_matches) {
+    var p = program_matches[1].split(';');
+    for (var i = 0; i < p.length; i++) {
+      if (p[i] && programs.indexOf(p[i]) === -1)
+        programs.push(p[i]);
+    }
+  }
+  console.info("Programs considered: ", programs);
+
+  // market handling
+  var manager = new TuringManager(default_market, markets,
+                  ui_notes, ui_tm, ui_meta, ui_data);
+  var application = new Application(manager, ui_tm, ui_meta, ui_data, ui_notes, ui_gear);
+
+  // REMARK I just hope it takes 100ms to make the application instance available
+  manager.addEventListener("programReady", function (_, data) {
+    return application.tm().addExampleProgram.apply(null, arguments);
+  });
+  manager.addEventListener("programActivated", function (program_id, data) {
+    application.tm().updateTestcaseList.apply(null, arguments);
+    application.loadMarketProgram(data);
+
+    ui_meta.find(".example").val(program_id);
+  });
+  ui_meta.find(".testcase_load").click(function () {
+    try {
+      var testdata = manager.get(ui_meta.find(".example").val());
+      var testsuite = testdata.title;
+      var testcase = ui_meta.find(".testcase").val();
+      var testcase_data;
+
+      for (var tc in testdata.testcases)
+        if (testdata.testcases[tc].name === testcase)
+          testcase_data = testdata.testcases[tc];
+      require(testcase_data !== undefined);
+
+      // TODO: add normalization function
+      application.tm().getTape().fromJSON(testcase_data.input.tape);
+      application.tm().setState(state(testcase_data.input.state));
+      application.tm().setFinalStates(testdata.final_states.map(
+        function (v) { return state(v) }));
+
+      application.tm().syncToUI();
+    } catch (e) {
+      console.error(e);
+      application.tm().alertNote(e.message);
+    }
+  });
+  ui_meta.find(".testcase_runall").click(function () {
+    try {
+      // prepare variables
+      var trun = new TestcaseRunner(manager);
+      var report = trun.runTestcase(manager.getActivated(), undefined,
+        application.tm().readTransitionTable());
+
+      var msg = "Testing " + report.program + " (" + (report.ok ? "OK" : "FAILED") + ")\n\n";
+      for (var tc in report.reports) {
+        msg += "[" + tc + "] " + (report.reports[tc].ok ? "OK" : report.reports[tc].error) + "\n";
+      }
+
+      application.tm().alertNote(msg);
+    } catch (e) {
+      application.tm().alertNote(e.message);
+    }
+  });
+  ui_meta.find(".example").change(function () {
+    try {
+      var program_id = $(this).val();
+    } catch (e) {
+      console.error(e);
+      application.tm().alertNote(e.message);
+    }
+  });
+  ui_meta.find(".example_load").click(function () {
+    try {
+      var current_program = ui_meta.find(".example").val();
+      application.manager().activateProgram(current_program);
+      window.localStorage['activeprogram'] = current_program;
+    } catch (e) {
+      console.error(e);
+      self.alertNote(e.message);
+    }
+  });
+
+  // Immediately load the default program and later update,
+  // if another program shall be activated
+  manager.add("intro", intro_program);
+  manager.activateProgram("intro");
+
+  for (var i = 0; i < programs.length; i++)
+    manager.load(programs[i]);
+
+  if (window.localStorage['activeprogram']) {
+    // load the program used in the last session
+    manager.activateWhenReady(window.localStorage['activeprogram']);
+  } else if (programs[count_default_programs]) {
+    // if user-defined program are provided, load first one per default
+    manager.activateWhenReady(programs[count_default_programs]);
+  }
+
+  application.run();
+  return application;
+}
+
+
 
 // -------------------------------- Symbol --------------------------------
 
@@ -2770,76 +3772,8 @@ var AnimatedTuringMachine = function (program, tape, final_states,
     for (var i = 0; i < ui_final_states.length; i++)
       require(ui_final_states[i].equals(tm_final_states[i]));
 
-    // verify 'transition table'
-    //throw new Error("TODO");
   };
 
-  // @function AnimatedTuringMachine.readTransitionTable:
-  //   read the whole content of the UI transition table
-  /*this.readTransitionTable = function () {
-    var data = [];
-    ui_data.find(".transition_table tbody tr").each(function () {
-      var row = [];
-      row.push($(this).find(".tt_read").val());
-      row.push($(this).find(".tt_from").val());
-      var to = [];
-      to.push($(this).find(".tt_write").val());
-      to.push($(this).find(".tt_move").val());
-      to.push($(this).find(".tt_to").val());
-      row.push(to);
-
-      if (row[0] === '' && row[1] === '' && row[2][0] === '' &&
-        row[2][1] === 'Stop' && row[2][2] === '')
-        return;
-
-      data.push(row);
-    });
-    return data;
-  };*/
-
-  // @function AnimatedTuringMachine.addNewTransitionTableRow:
-  //   append a new empty row to the transition table
-  /*this.addNewTransitionTableRow = function () {
-    var last = ui_data.find(".transition_table tbody tr").last().clone();
-    last.removeClass("nondeterministic deterministic");
-    last.appendTo(".transition_table tbody");
-    this.writeTransitionTableRow();
-  };*/
-
-  // @function AnimatedTuringMachine.writeTransitionTableRow:
-  //   write given vals (default: empty) to a transition table row (default: last)
- /* this.writeTransitionTableRow = function (vals, row) {
-    vals = def(vals, ['', '', ['', 'Stop', '']]);
-    row = def(row, ui_data.find(".transition_table tbody tr").last());
-    require(vals.length === 3);
-
-    row.find(".tt_read").val(vals[0]);
-    row.find(".tt_from").val(vals[1]);
-    row.find(".tt_write").val(vals[2][0]);
-    row.find(".tt_move").val(vals[2][1]);
-    row.find(".tt_to").val(vals[2][2]);
-  };*/
-
-  // @function AnimatedTuringMachine.isLastTransitionTableRowEmpty:
-  //   is the last transition table row empty?
-  /*this.isLastTransitionTableRowEmpty = function () {
-    var last = ui_data.find(".transition_table tbody tr").last();
-    return last.find(".tt_read").val() === '' &&
-           last.find(".tt_from").val() === '' &&
-           last.find(".tt_write").val() === '' &&
-           last.find(".tt_move").val() === 'Stop' &&
-           last.find(".tt_to").val() === '';
-  };*/
-
-  // @function AnimatedTuringMachine.clearTransitionTableRows:
-  //   remove all rows from the transition table and keep one empty one
-  /*this.clearTransitionTableRows = function () {
-    ui_data.find(".transition_table tbody tr").slice(1).remove();
-    ui_data.find(".transition_table tbody td").each(function () {
-      $(this).find(".tt_read, .tt_from, .tt_write, .tt_to").val("");
-      $(this).find(".tt_move").val("Stop");
-    });
-  };*/
 
   // API
 
@@ -3102,62 +4036,6 @@ var AnimatedTuringMachine = function (program, tape, final_states,
         self.addNewTransitionTableRow();
         var prelast = ui_data.find(".transition_table tbody tr").eq(-2);
         self.writeTransitionTableRow(row, prelast);
-      } catch (e) {
-        console.error(e);
-        self.alertNote(e.message);
-      }
-    });
-
-    $(document).on("change", ".transition_table", function () {
-      try {
-        // if (!last row empty) add new row
-        if (!self.isLastTransitionTableRowEmpty())
-          self.addNewTransitionTableRow();
-
-        // if (final state used) warn user that it won't execute
-        var row = 0;
-        $(this).find("tbody tr").each(function () {
-          var state_name = $(this).find(".tt_from").val();
-          if (self.isAFinalState(state(state_name))) {
-            self.alertNote("Line " + row + " would not executed, "
-              + "because a final state '" + state_name + "' will be reached, "
-              + "but not executed");
-              $(this).addClass("wontexecute");
-          } else {
-            $(this).removeClass("wontexecute");
-          }
-
-          row += 1;
-        });
-
-        // if (another row with same input exists), declare as nondeterministic
-        var known = [];
-        ui_data.find(".transition_table tbody tr").each(function (row_id) {
-          var from = [$(this).find(".tt_read").val(), $(this).find(".tt_from").val()];
-
-          var search = [];
-          for (var i = 0; i < known.length; i++)
-            if (from[0] === known[i][0] && from[1] === known[i][1] && from[0] && from[1])
-              search.push(i);
-
-          if (search.length > 0) {
-            self.alertNote("Nondeterministic behavior in rows " + search.join(", ")
-              + " and " + row_id + ".");
-            $(this).addClass("nondeterministic").removeClass("deterministic");
-          } else {
-            $(this).addClass("deterministic").removeClass("nondeterministic");
-            known.push(from);
-          }
-        });
-
-        // update actual table in ATM
-        self.getProgram().fromJSON(self.readTransitionTable());
-
-        // is it still an undefined instruction?
-        self._updateStateInUI(self.getState(), self.finalStateReached(),
-          self.undefinedInstruction(), self.getTape().read());
-
-        self.alertNote("Transition table updated!");
       } catch (e) {
         console.error(e);
         self.alertNote(e.message);
@@ -3490,7 +4368,6 @@ var AnimatedTuringMachine = function (program, tape, final_states,
     ui_data.find(".final_states").val(fs);
 
     window.loadNewTable();
-
   };
 
   // @method AnimatedTuringMachine.fromJSON: Import object state from JSON dump
@@ -4265,1004 +5142,278 @@ function GearVisualization(ui_gear, queue) {
 
 
 
-// ---------------------------- TuringManager -----------------------------
-
-// A turing market holds JSON data of various markets, where the JSON
-// represents programs, testcases, etc
-
-var TuringManager = function (default_market, markets, ui_notes, ui_tm, ui_meta, ui_data) {
-  // @member TuringManager.default_market: the market used per default
-
-  // UI elements
-  var ui_programs = ui_meta.find("select.example");
-  var ui_testcases = ui_meta.find("select.testcase");
-  var ui_transitiontable = ui_data.find(".transition_table");
-
-  // @callback programLoading(program)
-  //   [invoked when the market is about to load]
-  // @callback programVerified(program, verification_report)
-  //   [invoked whenever the market is verified]
-  // @callback programReady(program, data)
-  //   [invoked whenever the validated market is available]
-  // @callback programActivated(program, data)
-  //   [invoked whenever TuringManager.activateProgram(program) was invoked]
-  // @callback testcaseActivated(testcase, testcase_data)
-  //   [invoked whenever TuringManager.activateTestcase(testcase) was invoked]
-
-  // @member TuringManager.events: EventRegister for events of this object
-  var events = new EventRegister([
-    'programLoading', 'programVerified', 'programReady',
-    'programActivated', 'testcaseActivated'
-  ]);
-
-  // @member TuringManager.programs: The actual loaded markets
-  var programs = {};
-
-  // @member TuringManager.auto_activate_program:
-  //    markets to activate after calling activateWhenReady with a program
-  var autoactivate_program = {};
-
-  // @member TuringManager.auto_activate_testcase:
-  //    markets to activate after calling activateWhenReady with a testcase
-  var autoactivate_testcase = {};
-
-  // @member TuringManager.last_activated: last activated program
-  var last_activated = '';
-
-  // @member TuringManager.loading_timeout: maximum loading timeout
-  var loading_timeout = 7000;
-
-
-  // @method TuringManager._normId: Split an identifier
-  this._normId = function (id) {
-    // TODO: fails if testcase name contains "/"
-    require(id, "Market identifier must not be undefined");
-    if (id.indexOf(':') === -1 && id.indexOf('/') === -1)
-      return [default_market, id, undefined];
-    else if (id.indexOf(':') === -1) {
-      var parts = id.split('/');
-      return [default_market, parts[0], parts[1]];
-    } else if (id.indexOf('/') === -1) {
-      var parts = id.split(':');
-      return [parts[0], parts[1], undefined];
-    } else {
-      var parts1 = id.split(':');
-      var parts2 = parts1[1].split('/');
-      return [parts1[0], parts1[0], parts1[1]];
-    }
-  };
-
-  // @method TuringManager.addEventListener: event listener definition
-  this.addEventListener = function (evt, callback, how_often) {
-    return events.add(evt, callback, how_often);
-  };
-
-  // @method TuringManager.triggerEvent: trigger event
-  this.triggerEvent = function (evt) {
-    return events.trigger.apply(this, arguments);
-  };
-
-  // @method TuringManager.loaded: Was given program loaded?
-  this.loaded = function (program_id) {
-    var id = this._normId(program_id).slice(0, 2).join(":");
-    return programs[id] !== undefined;
-  };
-
-  // @method TuringManager.get: Get the defined program (or undefined)
-  this.get = function (program_id) {
-    var id = this._normId(program_id).slice(0, 2).join(":");
-    return programs[id];
-  };
-
-  // @method TuringManager.get: Get the title of the last activated program (or null)
-  this.getActivated = function () {
-    if (this.last_activated)
-      return this.last_activated;
-    else
-      return null;
-  };
-
-  // @method TuringManager.add: Synchronously add a market
-  this.add = function (program_id, data) {
-    var normalized = this._normId(program_id);
-    var id = normalized.slice(0, 2).join(":");
-    require(normalized[2] === undefined, "ID must not refer to a testcase");
-
-    this.triggerEvent('programLoading', id);
-    var report = verifyProgram(data);
-    this.triggerEvent('programVerified', id, report);
-    if (report)
-      return false;
-
-    programs[id] = data;
-    this.triggerEvent('programReady', id, data);
-
-    if (autoactivate_program[id])
-      this.activateProgram(id);
-    else if (autoactivate_testcase[id] && autoactivate_testcase[id].length > 0)
-      for (var i = 0; i < autoactivate_testcase[id].length; i++)
-        this.activateTestcase(autoactivate_testcase[id][i]);
-  };
-
-  // @method TuringManager.load: Asynchronously add a market
-  this.load = function (program_id) {
-    var normalized = this._normId(program_id);
-    var id = normalized.slice(0, 2).join(":");
-    var market = normalized[0];
-    var program = normalized[1];
-    var self = this;
-
-    if (programs[id] !== undefined) {
-      console.warn(id + " already loaded");
-      return;
-    }
-
-    this.triggerEvent('programLoading', id);
-
-    var loaded = false;
-    setTimeout(function () {
-      if (!loaded)
-        console.error("seems like " + id + " was not loaded in time");
-    }, loading_timeout);
-
-    $.get("" + markets[market] + program + ".json", function (data) {
-      loaded = true;
-      console.info("program " + id + " was loaded");
-
-      // verify data
-      var report = verifyProgram(data);
-      self.triggerEvent('programVerified', id, report);
-      if (report) {
-        console.warn("Program " + id + " is not correctly formatted");
-        console.debug(report);
-        return;
-      }
-
-      // set ready
-      programs[id] = data;
-      self.triggerEvent('programReady', id, data);
-
-      if (autoactivate_program[id])
-        self.activateProgram(id);
-      else if (autoactivate_testcase[id] && autoactivate_testcase[id].length > 0)
-        for (var i = 0; i < autoactivate_testcase[id].length; i++)
-          self.activateTestcase(autoactivate_testcase[id][i]);
-    }, "json");
-  };
-
-  // @method TuringManager.activateWhenReady: The next time the given market
-  //   is available, activate it
-  this.activateWhenReady = function (program_id) {
-    var normalized = this._normId(program_id);
-    var program_id = normalized.slice(0, 2).join(":");
-    var testcase_id = normalized.slice(0, 3).join(":");
-
-    if (normalized[2] === undefined) {
-      // refers to program
-      if (programs[program_id] !== undefined)
-        this.activateProgram(program_id);
-      else
-        autoactivate_program[program_id] = true;
-    } else {
-      // refers to testcase
-      if (programs[program_id] !== undefined)
-        this.activateTestcase(testcase_id);
-      else
-        autoactivate_testcase[program_id].push(testcase_id);
-    }
-  };
-
-  // @method TuringManager.activateProgram: Activate a given program
-  //   meaning a programActivated event will be fired and the
-  //   program JSON will be passed over
-  this.activateProgram = function (program_id) {
-    var normalized = this._normId(program_id);
-    var id = normalized.slice(0, 2).join(":");
-    require(normalized[2] === undefined,
-      "Market ID must refer to program, not testcase");
-
-    require(programs[id] !== undefined, "Program " + id
-      + " is not yet available");
-
-    this.triggerEvent('programActivated', id, programs[id]);
-    autoactivate_program[id] = false;
-  };
-
-  // @method TuringManager.activateTestcase: Activate a given testcase
-  //   meaning a testcaseActivated event will be fired and the
-  //   testcase JSON will be passed over
-  this.activateTestcase = function (testcase_id) {
-    var normalized = this._normId(testcase_id);
-    var program_id = normalized.slice(0, 2).join(":");
-    var testcase_id = normalized.slice(0, 3).join(":");
-    require(normalized[2] !== undefined,
-      "Market ID must refer to testcase, not program");
-
-    require(programs[program_id] !== undefined, "Program " + program_id
-      + " is not yet available");
-
-    var data = undefined;
-    for (var i = 0; i < programs[program_id]['testcases']; i++)
-      if (programs[program_id]['testcases'][i]['title'] === normalized[2])
-        data = programs[program_id]['testcases'][i];
-    require(data !== undefined, "Testcase " + testcase_id
-      + " not found in program " + program_id);
-
-    this.triggerEvent('testcaseActivated', testcase_id, data);
-    autoactivate_testcase[program_id] = autoactivate_testcase[program_id].filter(
-      function (v) { return v !== testcase_id; }
-    );
-  };
-
-  var self = this;
-  this.addEventListener('programActivated', function (program_id, data) {
-    self.last_activated = program_id;
-  });
-};
-
-
-
-// ------------------------------- Foswiki --------------------------------
-
-// - read: read turingmachine from userinput text
-// - write: write turingmachine to text string
-
-var foswiki = {};
-
-foswiki.removeMarkup = function (v) {
-  v = v.trim();
-  v = v.replace(/(\s|^)\*(\S.*?\S|\S)\*(\s|$)/, "$1$2$3");
-  v = v.replace(/(\s|^)__(\S.*?\S|\S)__(\s|$)/, "$1$2$3");
-  v = v.replace(/(\s|^)_(\S.*?\S|\S)_(\s|$)/, "$1$2$3");
-  v = v.replace(/(\s|^)==(\S.*?\S|\S)==(\s|$)/, "$1$2$3");
-  v = v.replace(/(\s|^)=(\S.*?\S|\S)=(\s|$)/, "$1$2$3");
-  v = v.replace(/<(\w|\/)[^>]*?>/, "");
-  return v.trim();
-};
-
-foswiki.exc = function (msg, lineno, col) {
-  msg = "[foswiki] " + msg;
-  if (typeof lineno !== 'undefined' && typeof col !== 'undefined')
-    msg += " [lineno " + (lineno + 1) + ", column " + col + "]";
-  else if (typeof lineno !== 'undefined')
-    msg += " [lineno " + (lineno + 1) + "]";
-  else if (typeof col !== 'undefined')
-    require(false, "Buggy call of foswiki.exc");
-  throw new SyntaxException(msg);
-};
-
-foswiki.readDefinitionLine = function (line, lineno) {
-  var normalize = foswiki.removeMarkup;
-
-  var m = line.match(/( +)\$ ([^:]+?): (.*)/);
-  if (m === null)
-    return null;
-  if (m[1].length !== 3)
-    throw new SyntaxException("Foswiki definition list items "
-      + "must start with exactly 3 spaces! Error on line " + lineno);
-
-  var key = normalize(m[2]);
-  var value = normalize(m[3]);
-
-  if (key.match(/name/i))
-    return { 'machine name': value };
-  else if (key.match(/final state/i))
-    return {
-      'final states': value.split(",").map(normalize)
-        .filter(function (v) { return Boolean(v); })
-    };
-  else if (key.match(/state/i))
-    return { 'initial state': value };
-  else if (key.match(/tape/i))
-    return { 'tape content': m[3].trim() };
-  else if (key.match(/blank/i))
-    return { 'blank symbol': normalize(value) };
-  else if (key.match(/cursor/i)) {
-    var cursor = parseInt(value);
-    if (isNaN(cursor))
-      throw new SyntaxException("Foswiki invalid. Cursor must be integer "
-        + "(line " + line + ")");
-    return { 'cursor': cursor };
-  } else {
-    var obj = {};
-    obj[key] = value;
-    return obj;
-  }
-};
-
-foswiki.writeDefinitionLine = function (obj) {
-  require(obj['machine name'], "machine name must not be empty");
-  require(obj['final states'], "final states must be given");
-  require(obj['initial state'], "initial state must not be given");
-  require(obj['tape content'], "tape content must not be empty");
-
-  return "   $ __Machine name__: " + obj['machine name'] + "\n"
-       + "   $ __Final states__: " + obj['final states'] + "\n"
-       + "   $ __Initial state__: " + obj['initial state'] + "\n"
-       + "   $ __Tape content__: " + obj['tape content'] + "\n";
-};
-
-foswiki.readTable = function (tokenstream) {
-  // expect one line per tokenstream element
-  //   { 'line': N, 'text': line surrounded by "|" }
-  var colsep = "|";
-  var table = [];
-  var columns = -1;
-  var columns_origin = 0;
-
-  if (tokenstream.length < 1)
-    foswiki.exc("No row found in foswiki table");
-  for (var t = 0; t < tokenstream.length; t++) {
-    require(!isNaN(parseInt(tokenstream[t]['line'])));
-    require(tokenstream[t]['line'] !== undefined);
-
-    var lineno = tokenstream[t]['line'];
-    var cols = tokenstream[t]['text'].split(colsep);
-
-    if (cols.length < 2)
-      foswiki.exc("No columns found in table row", lineno);
-
-    if (columns === -1) {
-      columns = cols.length;
-      columns_origin = lineno;
-    }
-    if (columns !== cols.length)
-      foswiki.exc("Inconsistent number of columns in table rows. " +
-        columns + " columns found in line " + (columns_origin + 1) + ". " +
-        "Got unexpected " + cols.length + " columns in line " +
-        (lineno + 1));
-
-    var onerow = { 'line': lineno, 'data': [] };
-    for (var col = 0; col < cols.length; col++) {
-      if (col === 0 && cols[col].trim() !== "")
-        foswiki.exc("Table rows must start with |", lineno);
-      if (col === cols.length - 1 && cols[col].trim() !== "")
-        foswiki.exc("Table rows must end with |", lineno);
-
-      if (col > 0 && col !== cols.length - 1)
-        onerow['data'].push(cols[col]);
-    }
-    table.push(onerow);
-  }
-
-  return table;
-};
-
-foswiki.readTransitionTriple = function (text)
-{
-  if (text.trim() === "" || text.trim() === "..." || text.trim() === "…")
-    return null;
-  var vals = text.split(" - ").map(foswiki.removeMarkup);
-  if (vals[0].trim() === "" && vals[1].trim() === "" &&
-    vals[2].trim() === "")
-    return null;
-  if (vals.length !== 3)
-    foswiki.exc("Transition triple must contain "
-      + "3 hyphen-separated values but I got: " + text);
-
-  return [vals[0], vals[1], vals[2]];
-}
-
-foswiki.readProgram = function (tokenstream)
-{
-  var table = foswiki.readTable(tokenstream);
-
-  var symbols = [];
-  var states = [];
-  var program = [];
-
-  for (var r = 0; r < table.length; r++) {
-    for (var c = 0; c < table[r]['data'].length; c++) {
-      var content = table[r]['data'][c];
-      var lineno = table[r]['line'];
-
-      // read symbol
-      if (r === 0 && c > 0) {
-        var n = foswiki.removeMarkup(content);
-        if ($.inArray(n, symbols) === -1)
-          symbols.push(n);
-        else {
-          var first = 0;
-          for (var i = 0; i < symbols.length; i++)
-            if (symbols[i] === n)
-              first = i;
-          foswiki.exc("Symbol '" + n + "' used twice as read symbol "
-            + "(columns " + first + " and " + c + ")");
+angular.module('turing', [])
+    .directive('turingTable', ['$timeout', function ($timeout) {
+        return {
+            restrict: 'C',
+            scope: true,
+            templateUrl: '../table.html',
+            link: function ($scope, element, attr) {
+
+                $scope.data = []
+                $scope.inputs = [];
+                $scope.states = [];
+
+                $scope.update=function(){
+                    console.log("update machine from table");
+                    window.app.tm().getProgram().clear();
+                    window.app.tm().getProgram().fromJSON($scope.data);
+                }
+
+
+                $scope.load = function () {
+                    $scope.data = []
+                    $scope.inputs = [];
+                    $scope.states = [];
+                    $timeout(function () {
+                        $scope.data = window.app.tm().getProgram().toJSON();
+                        console.log("updated table");
+                        init();
+                    });
+                }
+
+                //ext api
+                window.loadNewTable = function () {
+                    //use timeout to safe propagation of values to angular
+                    $timeout(function(){
+                        $scope.load();
+                    })
+                }
+
+                $scope.addInput = addInput;
+                $scope.addState = addState;
+                $scope.deleteInput = deleteInput;
+                $scope.deleteState = deleteState;
+                $scope.getElementAt = getElementAt;
+                $scope.updateElementAt = updateElementAt;
+
+                $scope.change = change;
+
+
+                function init() {
+                    for (var i in $scope.data) {
+                        var programEntry = $scope.data[i];
+                        addToSet($scope.inputs, programEntry[0]);
+                        addToSet($scope.states, programEntry[1]);
+                    }
+                }
+
+                function addToSet(array, element) {
+                    array = array || [];
+
+                    if (jQuery.inArray(element, array) === -1) {
+                        array.push(element);
+                    }
+                }
+
+                function removeFromArray(array, element) {
+                    for (var i in array) {
+                        if (array[i] === element) {
+                            array.splice(i, 1);
+                        }
+                    }
+                }
+
+
+                function addInput() {
+                    $scope.inputs.push('');
+                }
+
+                function addState() {
+                    $scope.states.push('');
+                }
+
+                function deleteState(index) {
+
+                    var state = $scope.states[index];
+
+                    for (var i = 0; i < $scope.data.length; i++) {
+                        var prog = $scope.data[i];
+                        if (prog[1] === state) {
+                            $scope.data.splice(i, 1);
+                            i--;
+                        }
+                    }
+                    removeFromArray($scope.states, state);
+                }
+
+                function deleteInput(index) {
+
+                    var input = $scope.inputs[index];
+
+                    for (var i = 0; i < $scope.data.length; i++) {
+                        var prog = $scope.data[i];
+                        if (prog[0] === input) {
+                            $scope.data.splice(i, 1);
+                            i--;
+                        }
+                    }
+                    removeFromArray($scope.inputs, input);
+                }
+
+
+                function deleteElement(state, input) {
+
+                    var input = $scope.inputs[index];
+
+                    for (var i = 0; i < $scope.data.length; i++) {
+                        var prog = $scope.data[i];
+                        if (prog[0] === input && prog[1] === state) {
+                            $scope.data.splice(i, 1);
+                            i--;
+                        }
+                    }
+                    removeFromArray($scope.inputs, input);
+                }
+
+                function getElementAt(state, input) {
+                    for (var i in $scope.data) {
+                        var prog = $scope.data[i];
+                        if (prog[0] === input && prog[1] === state) {
+                            return prog[2];
+                        }
+                    }
+                    return null;
+                }
+
+                function setElementAt(state, input, value) {
+                    for (var i in $scope.data) {
+                        var prog = $scope.data[i];
+                        if (prog[0] === input && prog[1] === state) {
+                            prog[2] = value;
+                        }
+                    }
+                    return null;
+                }
+
+                function updateElementAt(state, input, data) {
+                    var element = getElementAt(state, input);
+                    if (element == null) {
+                        $scope.data.push([input, state, data]);
+                    } else {
+                        if (data[0] === '' && data[1] === '' && data[2] === '') {
+                            deleteElement(state, input);
+                        } else {
+                            setElementAt(state, input, data);
+                        }
+                    }
+                    $scope.update();
+                }
+
+
+                function change() {
+                    //cleanup
+                    for (var i = 0; i < $scope.data.length; i++) {
+                        var prog = $scope.data[i];
+
+                        var d = prog[3];
+                        if (d[0] === '' && d[1] === '' && d[2] === '') {
+                            $scope.data.splice(i, 1);
+                            i--;
+                        }
+                    }
+                }
+
+            }
+        };
+    }]).directive("uniqueState", [function () {
+        return {
+            restrict: 'A',
+            scope: {
+                states: '=uniqueState',
+                program: '=program',
+                index: '=index'
+            },
+            require: 'ngModel',
+            link: function (scope, element, attr, ngModel) {
+                ngModel.$validators.uniqueValidator = function (modelValue, viewValue) {
+                    var value = modelValue || viewValue || '';
+                    if (!value || value === '') {
+                        return false;
+                    }
+                    var valueLower = value.toLowerCase();
+                    for (var i in scope.states) {
+                        if (!!scope.states[i] && scope.states[i].toLowerCase() === valueLower && i != scope.index) {
+                            return false;
+                        }
+                    }
+
+                    var input = scope.states[scope.index];
+
+                    for (var i in scope.program) {
+                        var prog = scope.program[i];
+                        if (prog[1] === input) {
+                            prog[1] = value;
+                        }
+                    }
+                    scope.states[scope.index] = value;
+
+                    return true;
+                };
+            }
+        };
+    }])
+    .directive('uniqueInput', [function () {
+        return {
+            restrict: 'A',
+            scope: {
+                inputs: '=uniqueInput',
+                program: '=program',
+                index: '=index'
+            },
+            require: 'ngModel',
+            link: function (scope, element, attr, ngModel) {
+                ngModel.$validators.uniqueValidator = function (modelValue, viewValue) {
+                    var value = modelValue || viewValue || '';
+                    if (!value || value === '') {
+                        return false;
+                    }
+                    var valueLower = value.toLowerCase();
+                    for (var i in scope.inputs) {
+                        if (!!scope.inputs[i] && scope.inputs[i].toLowerCase() === valueLower && i != scope.index) {
+                            return false;
+                        }
+                    }
+
+                    var input = scope.inputs[scope.index];
+
+                    for (var i in scope.program) {
+                        var prog = scope.program[i];
+                        if (prog[0] === input) {
+                            prog[0] = value;
+                        }
+                    }
+                    scope.inputs[scope.index] = value;
+
+                    return true;
+                };
+            }
+        };
+    }])
+    .directive('stateEditor', [function () {
+        return {
+            restrict: 'A',
+            scope: {
+                stateEditor: '=stateEditor',
+                callback: '=callback',
+                column: '=',
+                row: '='
+            },
+            template: '<input class="inline state-input" type="text" ng-model="data[0]""/>' +
+            '<select ng-model="data[1]" class="state-movement">' +
+            '<option></option>' +
+            '<option>Stop</option>' +
+            '<option>Left</option>' +
+            '<option>Right</option>' +
+            '</select>' +
+            '<input class="inline state-nextstate" type="text" ng-model="data[2]""/>',
+            link: function (scope, element, attr) {
+                scope.data = scope.stateEditor || [];
+                scope.$watchCollection('data', function (data) {
+                    if (data.length === 3 && !!data[0] && !!data[1] && !!data[2]) {
+                        scope.callback(scope.row, scope.column, data);
+                    }
+                })
+            }
         }
-      }
-      // read state
-      if (c === 0 && r > 0) {
-        var n = foswiki.removeMarkup(content);
-        if ($.inArray(n, states) === -1)
-          states.push(n);
-        else {
-          var first = 0;
-          for (var i = 0; i < states.length; i++)
-            if (states[i] === n)
-              first = i;
-          foswiki.exc("State '" + n + "' used twice as current state "
-            + "(rows " + first + " and " + r + ")");
-        }
-      }
-
-      // transition triple
-      if (c > 0 && r > 0) {
-        var tr_cell = foswiki.readTransitionTriple(content);
-        if (tr_cell)
-          program.push([symbols[c - 1], states[r - 1],
-            [tr_cell[0], tr_cell[1], tr_cell[2]]])
-      }
-    }
-  }
-
-  return program;
-};
-
-foswiki.writeProgram = function (prg) {
-  var justify = function (text, size, bold) {
-    if (typeof size === 'undefined')
-      size = 25;
-    else if (isNaN(parseInt(size)))
-      throw new Error("justify() only accepts integers as size parameter");
-    else
-      size = parseInt(size);
-
-    if (typeof text === 'undefined')
-      return repeat(" ", size);
-    var chars = size - (bold ? 2 : 0) - text.toString().length;
-    if (chars < 0)
-      chars = 0;
-    var t = text.toString();
-    return (bold ? "*" + t + "*" : t) + repeat(" ", chars);
-  };
-
-  // retrieve possible symbols and states to start with
-  var from_symbols = prg.getFromSymbols();
-  var from_states = prg.getFromStates();
-  var from_symbols_json = from_symbols.toJSON();
-  var from_states_json = from_states.toJSON();
-
-  var j = function (v) { return justify(v); };
-  var text = "| " + j("") + " | " + from_symbols.toJSON().map(j).join(" | ") + " |\n";
-
-  for (var j = 0; j < from_states_json.length; j++) {
-    var from_state = from_states_json[j];
-    var cols = [];
-
-    for (var i = 0; i < from_symbols_json.length; i++) {
-      var from_symb = from_symbols_json[i];
-      // TODO: normalization functions
-      var instr = prg.get(symbol(from_symb), state(from_state));
-
-      if (!instr)
-        cols.push(justify(""));
-      else
-        cols.push(justify(instr.toJSON().join(" - ")));
-    }
-
-    text += "| " + justify(from_state) + " | " + cols.join(" | ") + " |\n";
-  }
-
-  return text;
-};
-
-foswiki.read = function (tm, text, symbol_norm_fn, state_norm_fn) {
-  require(tm !== undefined, "TM must be given for foswiki import");
-  require(text !== undefined, "Foswiki text must be given for foswiki import");
-  if (typeof text !== 'string' || text.trim().length === 0)
-    foswiki.exc("Cannot import from empty text");
-
-  var rowsep = "\n";
-  var lines = text.split(rowsep);
-
-  var table_here = null;
-  var table = [];
-  var definitions = {};
-
-  // read it line-by-line
-  for (var l = 0; l < lines.length; l++) {
-    var line = lines[l];
-    if (line.match(/^\s*$/))
-      continue;
-
-    // mode transition
-    if (line.trim()[0] === '|' && (table_here === null || table_here === true)) {
-      table.push({ 'line': l, 'text': line });
-      table_here = true;
-    } else if (line.substr(0, 5) === '   $ ') {
-      if (table_here === true)
-        table_here = false;
-      var result = foswiki.readDefinitionLine(line, l);
-      for (var i in result)
-        definitions[i] = result[i];
-    }
-  }
-
-  if (table.length === 0)
-    foswiki.exc("No transition table found after reading "
-      + lines.length + " lines");
-
-  // load program to TM
-  var transition_table = foswiki.readProgram(table);
-  tm.getProgram().fromJSON(transition_table);
-
-  // load definitions to TM
-  if ('machine name' in definitions)
-    tm.setMachineName(definitions['machine name']);
-  if ('final states' in definitions)
-    tm.setFinalStates(definitions['final states'].map(function (v) {
-      return state(v, state_norm_fn);
-    }));
-  if ('initial state' in definitions)
-    tm.setState(state(definitions['initial state'], state_norm_fn));
-  if ('tape content' in definitions)
-    tm.getTape().fromHumanString(definitions['tape content'], symbol_norm_fn);
-
-  // compatibility definitions, TODO: remove as time goes by
-  if ('blank symbol' in definitions)
-    tm.getTape().setBlankSymbol(symbol(definitions['blank symbol'], symbol_norm_fn));
-
-  // invalid data fixes
-  if (tm.getFinalStates().length === 0)
-    tm.addFinalState(state("End"));
-
-  // write configuration to TM
-  return null;
-};
-
-foswiki.write = function (tm) {
-  require(tm && tm.getState, "tm must not be empty");
-
-  // metadata header
-  var text = foswiki.writeDefinitionLine({
-    'machine name': tm.getMachineName(),
-    'initial state': tm.getState().toString(),
-    'final states': tm.getFinalStates()
-      .map(function (v) {
-        require(v.toString().indexOf(",") === -1, "final states must not contain commas");
-        return v.toString();
-      })
-      .join(","),
-    'tape content': tm.getTape().toHumanString()
-  });
-
-  text += "\n";
-
-  // transition table
-  text += foswiki.writeProgram(tm.getProgram());
-
-  return text;
-};
-
-// ---------------------- TuringMarket verification -----------------------
-
-// verifyProgram: Verify correctness of market's program data
-var verifyProgram = function (dat) {
-  // map
-  //   'title'          required, string
-  //   'description'    optional, array of strings/maps, default []
-  //   'version'        required, string
-  //   'tape'           required, map
-  //       'blank'         optional, string, default "0"
-  //       'offset'        optional, integer, default 0
-  //       'cursor'        optional, integer, default -1
-  //       'data'          required, array of strings, len>=0
-  //   'program'        optional, array of homogeneous elements, default []
-  //       homogeneous elements: array of 5 strings
-  //           [3] satisfies       is choice from ["LEFT", "RIGHT", "STOP"]
-  //   'state'          required, string
-  //   'final_states'   required, array of strings, len>=1
-  //   'testcases'      optional, array of homogeneous elements, len>=0
-  //       homogeneous elements: map
-  //            'name'             required, string, len>=3
-  //            'input'            required, map
-  //                 'tape'              required, same layout as above
-  //                 'state'             required, string
-  //            'output'           required, len>=1
-  //                 'state'             optional, string
-  //                 'tapecontent'       optional, array of strings, len>=0
-  //                 'cursorposition'    optional, integer
-
-  // output['state'] will be satisfied if and only if
-  //   the final state equals output['state']
-  //   hence output['state'] must be declared as final state
-  // output['tapecontent'] will be satisfied if and only if
-  //   if the output['tapecontent'] equals tape values array (with blank symbols stripped from left and right)
-  // output['cursorposition'] will be satisfied if and only if
-  //   if the final cursor position matches the index of the cursor in output['tapecontent']
-  //   hence output['cursorposition'] requires definition of output['tapecontent']
-
-  var title_schema = { 'type': 'string', 'minLength': 3 };
-  var description_schema = {
-    'type': 'array',
-    'minItems': 0,
-    'items': {
-      'oneOf': [{ 'type': 'string' }, { 'type': 'object' }]
-    }
-  };
-  var version_schema = { 'type': 'string', 'minLength': 3 };
-  var tape_schema = {
-    'type': 'object',
-    'properties': {
-      'blank': { 'type': 'string', 'default': "0" },
-      'offset': { 'type': 'integer', 'default': 0 },
-      'cursor': { 'type': 'integer', 'default': -1 },
-      'data': { 'type': 'array', 'minItems': 0, 'items': { 'type': 'string' } }
-    },
-    'additionalProperties': false,
-    'required': ['data']
-  };
-  var program_schema = {
-    'type': 'array',
-    'minItems': 0,
-    'items': {
-      'type': 'array',
-      'minItems': 5,
-      'maxItems': 5,
-      'items': [
-        { 'type': 'string' },
-        { 'type': 'string' },
-        { 'type': 'string' },
-        { 'type': 'string', 'pattern': '^(LEFT|RIGHT|STOP)$' },
-        { 'type': 'string' }
-      ]
-    },
-    'uniqueItems': true
-  };
-  var state_schema = { 'type': 'string', 'minLength': 1 };
-  var final_states_schema = { 'type': 'array', 'minItems': 1, 'items': { 'type': 'string' } };
-  var testcase_schema = {
-    'type': 'array',
-    'minItems': 0,
-    'items': {
-      'type': 'object',
-      'properties': {
-        'name': { 'type': 'string', 'minLength': 1 },
-        'input': {
-          'type': 'object',
-          'properties': {
-            'tape': tape_schema,
-            'state': state_schema
-          },
-          'required': ['tape', 'state'],
-          'additionalProperties': false
-        },
-        'output': {
-          'type': 'object',
-          'properties': {
-            'state': state_schema,
-            'tapecontent': { 'type': 'array', 'minItems': 0, 'items': { 'type': 'string' }},
-            'cursorposition': { 'type': 'integer' }
-          },
-          'minProperties': 1,
-          'additionalProperties': false
-        },
-      },
-      'required': ['name', 'input', 'output'],
-      'additionalProperties': false
-    }
-  };
-
-  var schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'title': 'Turingmarket Schema',
-    'type': 'object',
-    'properties': {
-      'title': title_schema,
-      'description': description_schema,
-      'version': version_schema,
-      'tape': tape_schema,
-      'program': program_schema,
-      'state': state_schema,
-      'final_states': final_states_schema,
-      'testcases': testcase_schema
-    },
-    'additionalProperties': false,
-    'required': ['title', 'tape', 'state', 'final_states']
-  };
-
-  var env = jjv();
-  env.addSchema('market', schema);
-
-  return env.validate('market', dat);
-};
-
-
-
-// ------------------------------- UI-Tools -------------------------------
-
-var markup = function (element, text) {
-  var inline = function (t) {
-    var v = $("<div></div>").text(t).html();
-    v = v.replace(/(\W|^)\*((\w|_|:|\s)+)?\*(\W)/g, "$1<em>$2</em>$4");
-    v = v.replace(/\((.*?)\)\[([^\]]+)\]/g, "<a href='$2'>$1</a>");
-    return v;
-  };
-
-  var ul = null;
-  for (var i in text) {
-    if (/^\* /.exec(text[i])) {
-      if (!ul) {
-        ul = $("<ul></ul>");
-        element.append(ul);
-      }
-      ul.append($("<li></li>").html(inline(text[i].substr(2))));
-    } else {
-      element.append($("<p></p>").html(inline(text[i])));
-      ul = null;
-    }
-  }
-
-  return element;
-}
-
-// ------------------------- Application object ---------------------------
-
-var Application = function (manager, ui_tm, ui_meta, ui_data, ui_notes, ui_gear) {
-  var normalize_symbol_fn = normalizeSymbol;
-  var normalize_state_fn = normalizeState;
-
-  this.loadMarketProgram = function (data) {
-    // TODO all state() & symbol() need normalization function
-
-    var user_tape_to_userfriendly_tape = function (data) {
-      // input: { "data": ["1"], "cursor": -1, "blank": "0" }
-      // output: { "data": ["1"], "cursor": -1, "blank_symbol": "0",
-      //           "offset": 0, "history": [], "history_size": 0 }
-
-      // TODO: implement optional-default values correctly
-      return {
-        'data' : data.data,
-        'cursor': def(data.cursor, -1),
-        'blank_symbol' : def(data.blank, "0"),
-        'offset': def(data.offset, 0),
-        'history': [],
-        'history_size': 0
-      }
-    };
-
-    var user_program_to_program = function (data) {
-      // input: [['0', 'Start', '1', 'RIGHT', 'End']]
-      // output: [['0', 'Start', ['1', 'RIGHT', 'End']]]
-
-      var ret = [];
-      for (var i = 0; i < data.length; i++) {
-        ret.push([data[i][0], data[i][1],
-          [data[i][2], data[i][3], data[i][4]]]);
-      }
-      return ret;
-    };
-
-    try {
-      var tape = user_tape_to_userfriendly_tape(data['tape']);
-
-      this.tm().getTape().fromJSON(tape);
-      this.tm().setInitialTape(tape);
-      this.tm().getProgram().fromJSON(user_program_to_program(data['program']));
-      this.tm().setState(state(data['state']));
-      this.tm().setInitialState(state(data['state']));
-      this.tm().setFinalStates(data['final_states'].map(function (s) { return state(s) }));
-      this.tm().setDescriptionText(data['description']);
-      this.tm().setDescriptionTitle(data['title']);
-      this.tm().setVersion(data['version']);
-
-      this.tm().syncToUI();
-      this.tm().verifyUIsync();
-    } catch (e) {
-      console.error(e);
-      this.tm().alertNote(e.message);
-    }
-  };
-
-  this.manager = function () { return manager; };
-  this.tm = function () { return machine; };
-  this.run = function () { machine.initializeGUI(); };
-
-  var gear = new GearVisualization(ui_gear, new Queue());
-  var numbers = new NumberVisualization([0, 0, 0, 0, 0, 0, 0], ui_tm); // TODO: non-static 7
-  var machine = defaultAnimatedTuringMachine(normalize_symbol_fn,
-    normalize_state_fn, gear, numbers, ui_tm, ui_meta, ui_data, ui_notes);
-}
-
-
-// ----------------------------- Main routine -----------------------------
-
-var intro_program = {
-  "title" : "00 - Introduction",
-  "description" : [
-    "Hi! This project is all about *turingmachines*. What are turingmachines? They are a computational concept from *Theoretical Computer Science* (TCS) by Alan Turing (*\u20061912 †\u20061954). They illustrate one possible way to define computation and are as powerful as your computer. So how do they work?",
-    "Above you can see the animated turing machine with several control elements underneath. The animation consists of a tape (with bright background color) and one cursor (winded green structure). The text at the left bottom of the animation is called *current state*. You can press \"continue\" to compute the next *step*. What are steps?",
-    "At the bottom you can see a *transition table*. It defines a current situation, consisting of a read symbol and a state, and the next situation after one step has been performed. So when you press \"continue\" the program will read the symbol focused by the cursor and the current state. It will search for a line in the transition table matching those 2 values and will execute the corresponding result. The result consists of a symbol to write, a movement of the tape and a successor state.",
-    "The current program handles the following problem: Between '^' and '$' are there 0, 1 or 2 ones? Depending on the number, the final state is either Count0ones, Count1one or Count2ones.",
-    "You can edit the transition table yourself. Try it! 😊"
-  ],
-  "version" : "1.2 / 23rd of Aug 2015 / meisterluk",
-  "tape": {
-    "data": ["^", "0", "1", "0", "0", "1", "$"],
-    "cursor": 1,
-    "blank": "0"
-  },
-  "program": [
-    ["0", "Start", "0", "RIGHT", "Start"],
-    ["1", "Start", "1", "RIGHT", "Found1one"],
-    ["$", "Start", "$", "STOP", "Count0ones"],
-    ["0", "Found1one", "0", "RIGHT", "Found1one"],
-    ["1", "Found1one", "1", "RIGHT", "Found2ones"],
-    ["$", "Found1one", "$", "STOP", "Count1one"],
-    ["0", "Found2ones", "0", "RIGHT", "Found2ones"],
-    ["1", "Found2ones", "1", "STOP", "Count2ones"],
-    ["$", "Found2ones", "$", "STOP", "Count2ones"],
-  ],
-  "state" : "Start",
-  "final_states" : ["Count0ones", "Count1one", "Count2ones"],
-  "testcases" : [
-    {
-      "name": "find 0 ones in ^00000$",
-      "input": {
-          "tape": { "cursor": 1, "blank": "0", "data": ["^", "0", "0", "0", "0", "0", "$"] },
-          "state": "Start"
-      },
-      "output": { "state": "Count0ones" }
-    }, {
-      "name": "find 1 one in ^00010$",
-      "input": {
-          "tape": { "cursor": 1, "blank": "0", "data": ["^", "0", "0", "0", "1", "0", "$"] },
-          "state": "Start"
-      },
-      "output": { "state": "Count1one" }
-    }, {
-      "name": "find 2 ones in ^10010$",
-      "input": {
-          "tape": { "cursor": 1, "blank": "0", "data": ["^", "1", "0", "0", "1", "0", "$"] },
-          "state": "Start"
-      },
-      "output": { "state": "Count2ones" }
-    }, {
-      "name": "find 1 one in ^00010000000$",
-      "input": {
-          "tape": { "cursor": 1, "blank": "0", "data": ["^", "0", "0", "0", "1", "0", "0", "0", "0", "0", "0", "0", "$"] },
-          "state": "Start"
-      },
-      "output": { "state": "Count1one" }
-    }
-  ]
-};
-
-function main()
-{
-  // initialize application
-  var ui_tm = $(".turingmachine:eq(0)");
-  var ui_meta = $(".turingmachine_meta:eq(0)");
-  var ui_data = $(".turingmachine_data:eq(0)");
-  var ui_notes = $("#notes");
-  var ui_gear = ui_tm.find("#gear");
-
-  require(ui_tm.length > 0 && ui_meta.length > 0);
-  require(ui_data.length > 0 && ui_notes.length > 0 && ui_gear.length > 0);
-
-  // read configuration via URL hash
-  /// you can load additional programs via URL like:
-  ///   #programs{intro;2bit-xor}
-  var url_hash = window.location.hash.slice(1);
-  var default_market = 'local';
-  var market_matches = url_hash.match(/markets\{(([a-zA-Z0-9_-]+:.*?;)*([a-zA-Z0-9_-]+:.*?))\}/);
-  var program_matches = url_hash.match(/programs\{(([a-zA-Z0-9:_-]+;)*([a-zA-Z0-9:_-]+))\}/);
-
-  var markets = {'local': 'markets/'};  // local is always contained
-  if (market_matches) {
-    var p = market_matches[1].split(';');
-    for (var i = 0; i < p.length; i++) {
-      var q = p[i].split(':');
-      if (q[0] && q[1] && q[0] !== 'local') {
-        markets[q[0]] = q[1];
-      }
-    }
-  }
-  console.info("Markets considered: ", markets);
-
-  var programs = ['2bit-xor', '2bit-addition', '4bit-addition', 'mirroring', 'zero-writer'];
-  var count_default_programs = 5;
-  if (program_matches) {
-    var p = program_matches[1].split(';');
-    for (var i = 0; i < p.length; i++) {
-      if (p[i] && programs.indexOf(p[i]) === -1)
-        programs.push(p[i]);
-    }
-  }
-  console.info("Programs considered: ", programs);
-
-  // market handling
-  var manager = new TuringManager(default_market, markets,
-                  ui_notes, ui_tm, ui_meta, ui_data);
-  var application = new Application(manager, ui_tm, ui_meta, ui_data, ui_notes, ui_gear);
-
-  // REMARK I just hope it takes 100ms to make the application instance available
-  manager.addEventListener("programReady", function (_, data) {
-    return application.tm().addExampleProgram.apply(null, arguments);
-  });
-  manager.addEventListener("programActivated", function (program_id, data) {
-    application.tm().updateTestcaseList.apply(null, arguments);
-    application.loadMarketProgram(data);
-
-    ui_meta.find(".example").val(program_id);
-  });
-  ui_meta.find(".testcase_load").click(function () {
-    try {
-      var testdata = manager.get(ui_meta.find(".example").val());
-      var testsuite = testdata.title;
-      var testcase = ui_meta.find(".testcase").val();
-      var testcase_data;
-
-      for (var tc in testdata.testcases)
-        if (testdata.testcases[tc].name === testcase)
-          testcase_data = testdata.testcases[tc];
-      require(testcase_data !== undefined);
-
-      // TODO: add normalization function
-      application.tm().getTape().fromJSON(testcase_data.input.tape);
-      application.tm().setState(state(testcase_data.input.state));
-      application.tm().setFinalStates(testdata.final_states.map(
-        function (v) { return state(v) }));
-
-      application.tm().syncToUI();
-    } catch (e) {
-      console.error(e);
-      application.tm().alertNote(e.message);
-    }
-  });
-  ui_meta.find(".testcase_runall").click(function () {
-    try {
-      // prepare variables
-      var trun = new TestcaseRunner(manager);
-      var report = trun.runTestcase(manager.getActivated(), undefined,
-        application.tm().readTransitionTable());
-
-      var msg = "Testing " + report.program + " (" + (report.ok ? "OK" : "FAILED") + ")\n\n";
-      for (var tc in report.reports) {
-        msg += "[" + tc + "] " + (report.reports[tc].ok ? "OK" : report.reports[tc].error) + "\n";
-      }
-
-      application.tm().alertNote(msg);
-    } catch (e) {
-      application.tm().alertNote(e.message);
-    }
-  });
-  ui_meta.find(".example").change(function () {
-    try {
-      var program_id = $(this).val();
-    } catch (e) {
-      console.error(e);
-      application.tm().alertNote(e.message);
-    }
-  });
-  ui_meta.find(".example_load").click(function () {
-    try {
-      var current_program = ui_meta.find(".example").val();
-      application.manager().activateProgram(current_program);
-      window.localStorage['activeprogram'] = current_program;
-    } catch (e) {
-      console.error(e);
-      self.alertNote(e.message);
-    }
-  });
-
-  // Immediately load the default program and later update,
-  // if another program shall be activated
-  manager.add("intro", intro_program);
-  manager.activateProgram("intro");
-
-  for (var i = 0; i < programs.length; i++)
-    manager.load(programs[i]);
-
-  if (window.localStorage['activeprogram']) {
-    // load the program used in the last session
-    manager.activateWhenReady(window.localStorage['activeprogram']);
-  } else if (programs[count_default_programs]) {
-    // if user-defined program are provided, load first one per default
-    manager.activateWhenReady(programs[count_default_programs]);
-  }
-
-  application.run();
-  return application;
-}
-
+    }]);

@@ -33,7 +33,7 @@
         </th>
         <th scope="row" ng-init="rowIndex=$index">
             <input class="inline full" type="text" ng-model="row"
-                   size="" unique-state="states" program="data" index="rowIndex">
+                   size="" unique-state="states" program="data" index="rowIndex" ng-change="update()">
         </th>
         <td ng-repeat="col in inputs track by $index" row="row" column="col"
             ng-init="data=getElementAt(row,col)" state-editor="getElementAt(row,col)" callback="updateElementAt"></td>
