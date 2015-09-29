@@ -1,37 +1,46 @@
-
-
-
-
 angular.module('turing', [])
-    .directive('turingTable', ['$timeout',function ($timeout) {
+    .directive('turingTable', ['$timeout', function ($timeout) {
         return {
             restrict: 'C',
             scope: true,
             templateUrl: 'table.html',
             link: function ($scope, element, attr) {
 
-                window.synced=true;
-
                 $scope.data = []
                 $scope.inputs = [];
                 $scope.states = [];
 
-
-                $scope.$watch(function(){
+                /*$scope.$watch(function () {
                     return JSON.stringify($scope.data);
-                },function(value){
-                    console.log("refresh",$scope.data);
+                }, function (value) {
+
+                });*/
+
+                $scope.update=function(){
+                    console.log("refresh", $scope.data);
                     window.app.tm().getProgram().clear();
                     window.app.tm().getProgram().fromJSON($scope.data);
-                    window.app.tm().syncToUI();
-                });
-
-                $scope.load=function(){
-                    $scope.data=window.app.tm().getProgram().toJSON();
-                    console.log("loaded",$scope.data);
-                    init();
                 }
 
+
+                $scope.load = function () {
+                    $scope.data = []
+                    $scope.inputs = [];
+                    $scope.states = [];
+                    $timeout(function () {
+                        $scope.data = window.app.tm().getProgram().toJSON();
+                        console.log("loaded", $scope.data);
+                        init();
+                    });
+                }
+
+                //ext api
+                window.loadNewTable = function () {
+                    $timeout(function(){
+                        $scope.load();
+                    })
+
+                }
 
                 $scope.addInput = addInput;
                 $scope.addState = addState;
@@ -44,15 +53,12 @@ angular.module('turing', [])
 
 
                 function init() {
-                    $scope.inputs = [];
-                    $scope.states = [];
                     for (var i in $scope.data) {
                         var programEntry = $scope.data[i];
                         addToSet($scope.inputs, programEntry[0]);
                         addToSet($scope.states, programEntry[1]);
                     }
                 }
-
 
                 function addToSet(array, element) {
                     array = array || [];
@@ -132,6 +138,16 @@ angular.module('turing', [])
                     return null;
                 }
 
+                function setElementAt(state, input, value) {
+                    for (var i in $scope.data) {
+                        var prog = $scope.data[i];
+                        if (prog[0] === input && prog[1] === state) {
+                            prog[2] = value;
+                        }
+                    }
+                    return null;
+                }
+
                 function updateElementAt(state, input, data) {
                     var element = getElementAt(state, input);
                     if (element == null) {
@@ -140,15 +156,12 @@ angular.module('turing', [])
                         if (data[0] === '' && data[1] === '' && data[2] === '') {
                             deleteElement(state, input);
                         } else {
-                            element = [input, state, data];
+                            setElementAt(state, input, data);
                         }
-
-
                     }
-
-                    console.log($scope.data);
+                    console.log("updateElement");
+                    $scope.update();
                 }
-
 
 
                 function change() {

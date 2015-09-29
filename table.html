@@ -36,7 +36,7 @@
                    size="" unique-state="states" program="data" index="rowIndex">
         </th>
         <td ng-repeat="col in inputs track by $index" row="row" column="col"
-            ng-init="data=getElementAt(row,col)" state-editor="getElementAt(row,col)" callback="updateElementAt">
+            ng-init="data=getElementAt(row,col)" state-editor="getElementAt(row,col)" callback="updateElementAt"></td>
     <tr>
         <td colspan="2">
             <button class="btn btn-default" ng-click="addState()"><span class="glyphicon glyphicon-plus"></span>
@@ -46,5 +46,3 @@
     </tr>
     </tbody>
 </table>
-
-<button ng-click="load()">Load better table (don't press this twice)</button>

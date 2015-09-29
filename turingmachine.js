@@ -2765,7 +2765,7 @@ var AnimatedTuringMachine = function (program, tape, final_states,
 
   // @function AnimatedTuringMachine.readTransitionTable:
   //   read the whole content of the UI transition table
-  this.readTransitionTable = function () {
+  /*this.readTransitionTable = function () {
     var data = [];
     ui_data.find(".transition_table tbody tr").each(function () {
       var row = [];
@@ -2784,20 +2784,20 @@ var AnimatedTuringMachine = function (program, tape, final_states,
       data.push(row);
     });
     return data;
-  };
+  };*/
 
   // @function AnimatedTuringMachine.addNewTransitionTableRow:
   //   append a new empty row to the transition table
-  this.addNewTransitionTableRow = function () {
+  /*this.addNewTransitionTableRow = function () {
     var last = ui_data.find(".transition_table tbody tr").last().clone();
     last.removeClass("nondeterministic deterministic");
     last.appendTo(".transition_table tbody");
     this.writeTransitionTableRow();
-  };
+  };*/
 
   // @function AnimatedTuringMachine.writeTransitionTableRow:
   //   write given vals (default: empty) to a transition table row (default: last)
-  this.writeTransitionTableRow = function (vals, row) {
+ /* this.writeTransitionTableRow = function (vals, row) {
     vals = def(vals, ['', '', ['', 'Stop', '']]);
     row = def(row, ui_data.find(".transition_table tbody tr").last());
     require(vals.length === 3);
@@ -2807,28 +2807,28 @@ var AnimatedTuringMachine = function (program, tape, final_states,
     row.find(".tt_write").val(vals[2][0]);
     row.find(".tt_move").val(vals[2][1]);
     row.find(".tt_to").val(vals[2][2]);
-  };
+  };*/
 
   // @function AnimatedTuringMachine.isLastTransitionTableRowEmpty:
   //   is the last transition table row empty?
-  this.isLastTransitionTableRowEmpty = function () {
+  /*this.isLastTransitionTableRowEmpty = function () {
     var last = ui_data.find(".transition_table tbody tr").last();
     return last.find(".tt_read").val() === '' &&
            last.find(".tt_from").val() === '' &&
            last.find(".tt_write").val() === '' &&
            last.find(".tt_move").val() === 'Stop' &&
            last.find(".tt_to").val() === '';
-  };
+  };*/
 
   // @function AnimatedTuringMachine.clearTransitionTableRows:
   //   remove all rows from the transition table and keep one empty one
-  this.clearTransitionTableRows = function () {
+  /*this.clearTransitionTableRows = function () {
     ui_data.find(".transition_table tbody tr").slice(1).remove();
     ui_data.find(".transition_table tbody td").each(function () {
       $(this).find(".tt_read, .tt_from, .tt_write, .tt_to").val("");
       $(this).find(".tt_move").val("Stop");
     });
-  };
+  };*/
 
   // API
 
@@ -3478,13 +3478,8 @@ var AnimatedTuringMachine = function (program, tape, final_states,
     var fs = this.getFinalStates().map(toStr).join(", ");
     ui_data.find(".final_states").val(fs);
 
-    // write 'transition table'
-    this.clearTransitionTableRows();
-    var prg = this.toJSON()['program'];
-    for (var row = 0; row < prg.length; row++) {
-      this.writeTransitionTableRow(prg[row]);
-      this.addNewTransitionTableRow();
-    }
+    window.loadNewTable();
+
   };
 
   // @method AnimatedTuringMachine.fromJSON: Import object state from JSON dump
