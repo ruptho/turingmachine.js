@@ -967,6 +967,10 @@ var AnimatedTuringMachine = function (program, tape, final_states,
 
   };
 
+  this.readTransitionTable = function () {
+    return this.getProgram().toJSON();
+  };
+
 
   // API
 
