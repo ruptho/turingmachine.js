@@ -37,9 +37,7 @@
   /* ============================== GENERIC ============================== */
 
 
-  *{
-    box-sizing: border-box;
-}
+
   body {
     background-color: #CEE2BF;
     font-family: "Cala-Light", Helvetica, sans-serif;
@@ -222,6 +220,10 @@
     box-shadow: 5px 5px 5px #785;
     border-radius: 10px 10px;
     z-index: 20;
+  }
+
+  .turingmachine_data{
+    width:100%;
   }
 
   .turingmachine .io {

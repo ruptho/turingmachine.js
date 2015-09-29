@@ -1,0 +1,89 @@
+
+/*input.inline{
+    padding:8px 1em;
+    border: none;
+    background: none;
+    display: inline-block;
+    margin:-4px;
+}
+
+input.inline.full{
+    width:100%;
+    height:100%;
+    display:block;
+}
+
+input.inline:focus {
+    background-color:#daebf2;
+    background: transparent;
+    box-shadow: none;
+    -webkit-box-shadow:none;
+    outline: none;
+}
+*/
+
+input.ng-invalid{
+    background-color:#ffe6e6 !important;
+    /*border:1px solid #ff8080;*/
+}
+
+
+.glyphicon-plus:before{
+    content: '+';
+}
+
+.glyphicon-remove:before{
+    content: 'X';
+}
+
+.glyphicon-arrow-down:before{
+    content: '\2193';
+}
+
+.glyphicon-arrow-right:before{
+    content: '\2192';
+}
+
+.turing-table{
+    overflow-x: scroll;
+    width:100%;
+}
+
+
+.turing-table table{
+    border:1px solid black;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.turing-table table td{
+    width:200px;
+    min-width: 200px;
+}
+
+.turing-table table td,
+.turing-table table th{
+    border:1px solid black;
+    border-collapse: collapse;
+
+    padding:4px;
+}
+
+
+.turing-table {
+    width: 100%;
+    overflow-y: hidden;
+    overflow-x: auto;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+.turing-table > .table {
+    margin-bottom: 0;
+}
+.turing-table> .table > thead > tr > th,
+.turing-table> .table > tbody > tr > th,
+.turing-table> .table > tfoot > tr > th,
+.turing-table> .table > thead > tr > td,
+.turing-table> .table > tbody > tr > td,
+.turing-table> .table > tfoot > tr > td {
+    white-space: nowrap;
+}

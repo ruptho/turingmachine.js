@@ -10,6 +10,14 @@
     <script type="text/javascript" src="deps/jquery-1.11.3.js"></script>
     <script type="text/javascript" src="deps/jjv-1.0.2.js"></script>
     <script type="text/javascript" src="turingmachine.js"></script>
+
+      <!--new table-->
+
+      <script type="text/javascript" src="deps/angular.min.js"></script>
+      <script type="text/javascript" src="table.js"></script>
+      <link rel="stylesheet" href="table.css" />
+
+
     <script type="text/javascript">
       $(document).ready(function () {
         app = main();
@@ -149,6 +157,9 @@
         </p>
 
         <h2>Transition table</h2>
+        <div data-ng-app="turing">
+        <div class="turing-table"></div>
+        </div>
         <div>
             <table class="transition_table">
                 <thead>
