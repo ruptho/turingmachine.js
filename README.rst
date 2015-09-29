@@ -33,21 +33,18 @@ You need Node.js (with npm) and Grunt (install with `npm install -g grunt-cli`).
 
 At first, install needed dependencies
 
-```
-npm install
-```
+   npm install
+
 
 To concat all Javascript source files, run
 
-```
-grunt
-```
+    grunt
+
 
 Watch for changes
 
-```
-grunt watch
-```
+    grunt watch
+
 
 Roadmap
 -------
