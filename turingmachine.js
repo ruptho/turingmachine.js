@@ -498,6 +498,8 @@ function SyntaxException(msg)
   return err;
 }
 
+
+
 // -------------------------------- Symbol --------------------------------
 
 // @object Symbol: Symbol on Turing machine tape.
@@ -586,6 +588,8 @@ function symbol(val, norm_fn) {
   return new Symbol(value);
 }
 
+
+
 // --------------------------------- State --------------------------------
 
 // @object State: State of the Turing machine.
@@ -665,6 +669,8 @@ function state(name, norm_fn)
 
   return new State(value);
 }
+
+
 
 // -------------------------------- Motion --------------------------------
 
@@ -844,6 +850,7 @@ function position(val, norm_fn)
   return new Position(value);
 }
 
+
 // ------------------------------ InstrTuple ------------------------------
 
 // @object InstrTuple: Instruction tuple (value, movement, to state)
@@ -921,6 +928,7 @@ function instrtuple(w, m, s)
 {
   return new InstrTuple(w, m, s);
 }
+
 
 // -------------------------------- Program -------------------------------
 
@@ -1080,6 +1088,7 @@ function Program()
 
   this.isProgram = true;
 };
+
 
 // --------------------------------- Tape ---------------------------------
 
@@ -1791,6 +1800,8 @@ function UserFriendlyTape(blank_symbol, history_size)
 
   this.isUserFriendlyTape = true;
 }
+
+
 
 // -------------------------------- Machine -------------------------------
 
@@ -3699,6 +3710,7 @@ var TestcaseRunner = function (manager) {
   };
 };
 
+
 // -------------------------- NumberVisualization -------------------------
 
 var NumberVisualization = function (values, ui_root) {
@@ -4256,6 +4268,8 @@ function GearVisualization(ui_gear, queue) {
   };
 };
 
+
+
 // ---------------------------- TuringManager -----------------------------
 
 // A turing market holds JSON data of various markets, where the JSON
@@ -4490,6 +4504,7 @@ var TuringManager = function (default_market, markets, ui_notes, ui_tm, ui_meta,
     self.last_activated = program_id;
   });
 };
+
 
 
 // ------------------------------- Foswiki --------------------------------
@@ -4958,6 +4973,7 @@ var verifyProgram = function (dat) {
 };
 
 
+
 // ------------------------------- UI-Tools -------------------------------
 
 var markup = function (element, text) {
@@ -5254,3 +5270,4 @@ function main()
   application.run();
   return application;
 }
+

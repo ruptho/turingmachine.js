@@ -1145,7 +1145,7 @@ var AnimatedTuringMachine = function (program, tape, final_states,
     var export_tm = function (format) {
       var text;
       if (format === "json")
-        text = JSON.stringify(self.toJSON());
+        text = JSON.stringify(self.toJSON(),null,2);
       else
         text = foswiki.write(self);
       $("#overlay_text .data").val("" + text);
