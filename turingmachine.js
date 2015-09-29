@@ -3936,6 +3936,7 @@ var AnimatedTuringMachine = function (program, tape, final_states,
         $("#overlay_text .action").text("Import");
         $("#overlay_text .data").attr("readonly", false).val("");
         $("#overlay_text .import").show();
+        $("#overlay_text .js-clipboard").hide();
       } catch (e) {
         console.error(e);
         self.alertNote(e.message);
@@ -3952,6 +3953,22 @@ var AnimatedTuringMachine = function (program, tape, final_states,
       }
     });
 
+    $("#overlay_text .js-clipboard").click(function () {
+      try {
+        var data = $("#overlay_text .data");
+        data.get()[0].select();
+
+        try {
+          var successful = document.execCommand('copy');
+        } catch (err) {
+          alert('Oops, unable to copy to clipboard. Press Ctrl/Cmd+C to copy.');
+        }
+      } catch (e) {
+        console.error(e);
+        self.alertNote(e.message);
+      }
+    });
+
     ui_tm.find(".export_button").click(function () {
       try {
         toggle_overlay();
@@ -3959,6 +3976,7 @@ var AnimatedTuringMachine = function (program, tape, final_states,
         $("#overlay_text .action").text("Export");
         $("#overlay_text .data").attr("readonly", true);
         $("#overlay_text .import").hide();
+        $("#overlay_text .js-clipboard").show();
 
         export_tm($("#overlay_text").find(".export_format").val());
       } catch (e) {
@@ -5154,7 +5172,7 @@ angular.module('turing', [])
                 $scope.inputs = [];
                 $scope.states = [];
 
-                $scope.update=function(){
+                $scope.update = function () {
                     console.log("update machine from table");
                     window.app.tm().getProgram().clear();
                     window.app.tm().getProgram().fromJSON($scope.data);
@@ -5174,7 +5192,7 @@ angular.module('turing', [])
                 //ext api
                 window.loadNewTable = function () {
                     //use timeout to safe propagation of values to angular
-                    $timeout(function(){
+                    $timeout(function () {
                         $scope.load();
                     })
                 }
@@ -5187,7 +5205,7 @@ angular.module('turing', [])
                 $scope.updateElementAt = updateElementAt;
 
                 $scope.change = change;
-                
+
                 function init() {
                     for (var i in $scope.data) {
                         var programEntry = $scope.data[i];
@@ -5211,7 +5229,6 @@ angular.module('turing', [])
                         }
                     }
                 }
-
 
                 function addInput() {
                     $scope.inputs.push('');
@@ -5248,8 +5265,7 @@ angular.module('turing', [])
                     }
                     removeFromArray($scope.inputs, input);
                 }
-
-
+                
                 function deleteElement(state, input) {
 
                     var input = $scope.inputs[index];
