@@ -10,12 +10,11 @@ angular.module('turing', [])
                 $scope.inputs = [];
                 $scope.states = [];
 
-                $scope.update=function(){
+                $scope.update = function () {
                     console.log("update machine from table");
                     window.app.tm().getProgram().clear();
                     window.app.tm().getProgram().fromJSON($scope.data);
                 }
-
 
                 $scope.load = function () {
                     $scope.data = []
@@ -31,7 +30,7 @@ angular.module('turing', [])
                 //ext api
                 window.loadNewTable = function () {
                     //use timeout to safe propagation of values to angular
-                    $timeout(function(){
+                    $timeout(function () {
                         $scope.load();
                     })
                 }
@@ -44,7 +43,6 @@ angular.module('turing', [])
                 $scope.updateElementAt = updateElementAt;
 
                 $scope.change = change;
-
 
                 function init() {
                     for (var i in $scope.data) {
@@ -69,7 +67,6 @@ angular.module('turing', [])
                         }
                     }
                 }
-
 
                 function addInput() {
                     $scope.inputs.push('');
@@ -106,8 +103,7 @@ angular.module('turing', [])
                     }
                     removeFromArray($scope.inputs, input);
                 }
-
-
+                
                 function deleteElement(state, input) {
 
                     var input = $scope.inputs[index];

@@ -5160,7 +5160,6 @@ angular.module('turing', [])
                     window.app.tm().getProgram().fromJSON($scope.data);
                 }
 
-
                 $scope.load = function () {
                     $scope.data = []
                     $scope.inputs = [];
@@ -5188,8 +5187,7 @@ angular.module('turing', [])
                 $scope.updateElementAt = updateElementAt;
 
                 $scope.change = change;
-
-
+                
                 function init() {
                     for (var i in $scope.data) {
                         var programEntry = $scope.data[i];
