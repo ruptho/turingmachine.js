@@ -36,7 +36,9 @@
 @media all {
   /* ============================== GENERIC ============================== */
 
-
+*{
+  box-sizing: border-box;
+}
 
   body {
     background-color: #CEE2BF;

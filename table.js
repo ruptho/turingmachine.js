@@ -21,15 +21,14 @@ angular.module('turing', [])
                     return JSON.stringify($scope.data);
                 },function(value){
                     console.log("refresh",$scope.data);
-
                     window.app.tm().getProgram().clear();
-                    window.app.tm().getProgram().fromJSON(value);
-                    window.synced=false;
+                    window.app.tm().getProgram().fromJSON($scope.data);
                     window.app.tm().syncToUI();
                 });
 
                 $scope.load=function(){
                     $scope.data=window.app.tm().getProgram().toJSON();
+                    console.log("loaded",$scope.data);
                     init();
                 }
 
@@ -45,7 +44,6 @@ angular.module('turing', [])
 
 
                 function init() {
-
                     $scope.inputs = [];
                     $scope.states = [];
                     for (var i in $scope.data) {
@@ -251,14 +249,14 @@ angular.module('turing', [])
                 column: '=',
                 row: '='
             },
-            template: '<input class="inline" type="text" ng-model="data[0]" size="{{data[0].length+1}}"/>' +
-            '<select ng-model="data[1]">' +
+            template: '<input class="inline state-input" type="text" ng-model="data[0]""/>' +
+            '<select ng-model="data[1]" class="state-movement">' +
             '<option></option>' +
             '<option>Stop</option>' +
             '<option>Left</option>' +
             '<option>Right</option>' +
             '</select>' +
-            '<input class="inline" type="text" ng-model="data[2]" size="{{data[2].length+1}}"/>',
+            '<input class="inline state-nextstate" type="text" ng-model="data[2]""/>',
             link: function (scope, element, attr) {
                 scope.data = scope.stateEditor || [];
                 scope.$watchCollection('data', function (data) {
