@@ -6,6 +6,13 @@ angular.module('turing', [])
             templateUrl: '../table.html',
             link: function ($scope, element, attr) {
 
+                $(document).on('syncMachine',function(){
+                    //use timeout to safe propagation of values to angular
+                    $timeout(function () {
+                        $scope.load();
+                    })
+                });
+
                 $scope.data = []
                 $scope.inputs = [];
                 $scope.states = [];
@@ -25,14 +32,6 @@ angular.module('turing', [])
                         console.log("updated table");
                         init();
                     });
-                }
-
-                //ext api
-                window.loadNewTable = function () {
-                    //use timeout to safe propagation of values to angular
-                    $timeout(function () {
-                        $scope.load();
-                    })
                 }
 
                 $scope.addInput = addInput;

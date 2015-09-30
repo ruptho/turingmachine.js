@@ -1057,7 +1057,9 @@ var AnimatedTuringMachine = function (program, tape, final_states,
         var fs = this.getFinalStates().map(toStr).join(", ");
         ui_data.find(".final_states").val(fs);
 
-        window.loadNewTable();
+
+        //fire window event for UI
+        $(document).trigger('syncMachine');
     };
 
     // @method AnimatedTuringMachine.fromJSON: Import object state from JSON dump
@@ -5162,6 +5164,13 @@ angular.module('turing', [])
             templateUrl: '../table.html',
             link: function ($scope, element, attr) {
 
+                $(document).on('syncMachine',function(){
+                    //use timeout to safe propagation of values to angular
+                    $timeout(function () {
+                        $scope.load();
+                    })
+                });
+
                 $scope.data = []
                 $scope.inputs = [];
                 $scope.states = [];
@@ -5181,14 +5190,6 @@ angular.module('turing', [])
                         console.log("updated table");
                         init();
                     });
-                }
-
-                //ext api
-                window.loadNewTable = function () {
-                    //use timeout to safe propagation of values to angular
-                    $timeout(function () {
-                        $scope.load();
-                    })
                 }
 
                 $scope.addInput = addInput;

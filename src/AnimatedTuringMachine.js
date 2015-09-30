@@ -1057,7 +1057,9 @@ var AnimatedTuringMachine = function (program, tape, final_states,
         var fs = this.getFinalStates().map(toStr).join(", ");
         ui_data.find(".final_states").val(fs);
 
-        window.loadNewTable();
+
+        //fire window event for UI
+        $(document).trigger('syncMachine');
     };
 
     // @method AnimatedTuringMachine.fromJSON: Import object state from JSON dump
