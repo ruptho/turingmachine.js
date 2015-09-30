@@ -1,12 +1,12 @@
-angular.module('turing', [])
-    .directive('turingTable', ['$timeout', function ($timeout) {
+(function (window, angular, app, undefined) {
+    app.directive('turingTable', ['$timeout', function ($timeout) {
         return {
             restrict: 'C',
             scope: true,
-            templateUrl: '../table.html',
+            templateUrl: '../../table.html',
             link: function ($scope, element, attr) {
 
-                $(document).on('syncMachine',function(){
+                $(document).on('syncMachine', function () {
                     //use timeout to safe propagation of values to angular
                     $timeout(function () {
                         $scope.load();
@@ -87,7 +87,7 @@ angular.module('turing', [])
                         }
                     }
                     removeFromArray($scope.states, state);
-                    $scope.update() 
+                    $scope.update()
                 }
 
                 function deleteInput(index) {
@@ -102,9 +102,9 @@ angular.module('turing', [])
                         }
                     }
                     removeFromArray($scope.inputs, input);
-                    $scope.update() 
+                    $scope.update()
                 }
-                
+
                 function deleteElement(state, input) {
 
                     var input = $scope.inputs[index];
@@ -170,104 +170,5 @@ angular.module('turing', [])
 
             }
         };
-    }]).directive("uniqueState", [function () {
-        return {
-            restrict: 'A',
-            scope: {
-                states: '=uniqueState',
-                program: '=program',
-                index: '=index'
-            },
-            require: 'ngModel',
-            link: function (scope, element, attr, ngModel) {
-                ngModel.$validators.uniqueValidator = function (modelValue, viewValue) {
-                    var value = modelValue || viewValue || '';
-                    if (!value || value === '') {
-                        return false;
-                    }
-                    var valueLower = value.toLowerCase();
-                    for (var i in scope.states) {
-                        if (!!scope.states[i] && scope.states[i].toLowerCase() === valueLower && i != scope.index) {
-                            return false;
-                        }
-                    }
-
-                    var input = scope.states[scope.index];
-
-                    for (var i in scope.program) {
-                        var prog = scope.program[i];
-                        if (prog[1] === input) {
-                            prog[1] = value;
-                        }
-                    }
-                    scope.states[scope.index] = value;
-
-                    return true;
-                };
-            }
-        };
-    }])
-    .directive('uniqueInput', [function () {
-        return {
-            restrict: 'A',
-            scope: {
-                inputs: '=uniqueInput',
-                program: '=program',
-                index: '=index'
-            },
-            require: 'ngModel',
-            link: function (scope, element, attr, ngModel) {
-                ngModel.$validators.uniqueValidator = function (modelValue, viewValue) {
-                    var value = modelValue || viewValue || '';
-                    if (!value || value === '') {
-                        return false;
-                    }
-                    var valueLower = value.toLowerCase();
-                    for (var i in scope.inputs) {
-                        if (!!scope.inputs[i] && scope.inputs[i].toLowerCase() === valueLower && i != scope.index) {
-                            return false;
-                        }
-                    }
-
-                    var input = scope.inputs[scope.index];
-
-                    for (var i in scope.program) {
-                        var prog = scope.program[i];
-                        if (prog[0] === input) {
-                            prog[0] = value;
-                        }
-                    }
-                    scope.inputs[scope.index] = value;
-
-                    return true;
-                };
-            }
-        };
-    }])
-    .directive('stateEditor', [function () {
-        return {
-            restrict: 'A',
-            scope: {
-                stateEditor: '=stateEditor',
-                callback: '=callback',
-                column: '=',
-                row: '='
-            },
-            template: '<input class="inline state-input" type="text" ng-model="data[0]""/>' +
-            '<select ng-model="data[1]" class="state-movement">' +
-            '<option></option>' +
-            '<option>Stop</option>' +
-            '<option>Left</option>' +
-            '<option>Right</option>' +
-            '</select>' +
-            '<input class="inline state-nextstate" type="text" ng-model="data[2]""/>',
-            link: function (scope, element, attr) {
-                scope.data = scope.stateEditor || [];
-                scope.$watchCollection('data', function (data) {
-                    if (data.length === 3 && !!data[0] && !!data[1] && !!data[2]) {
-                        scope.callback(scope.row, scope.column, data);
-                    }
-                })
-            }
-        }
     }]);
+})(window, angular, angular.module('turingmachine.js'));
