@@ -88,6 +88,7 @@ angular.module('turing', [])
                         }
                     }
                     removeFromArray($scope.states, state);
+                    $scope.update() 
                 }
 
                 function deleteInput(index) {
@@ -102,6 +103,7 @@ angular.module('turing', [])
                         }
                     }
                     removeFromArray($scope.inputs, input);
+                    $scope.update() 
                 }
                 
                 function deleteElement(state, input) {
@@ -116,6 +118,7 @@ angular.module('turing', [])
                         }
                     }
                     removeFromArray($scope.inputs, input);
+                    // no update since already called from update method
                 }
 
                 function getElementAt(state, input) {

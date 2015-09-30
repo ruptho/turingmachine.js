@@ -15,7 +15,7 @@
         <th></th>
         <th ng-repeat="c in inputs track by $index">
             <input class="inline full" type="text" ng-model="c"
-                   size="" unique-input="inputs" program="data" index="$index">
+                   size="" unique-input="inputs" program="data" index="$index" ng-change="update()">
         </th>
         <th>
             <button class="btn btn-default" ng-click="addInput()"><span class="glyphicon glyphicon-plus"></span>
