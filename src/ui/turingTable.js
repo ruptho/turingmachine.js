@@ -3,7 +3,7 @@
         return {
             restrict: 'C',
             scope: true,
-            templateUrl: '../../table.html',
+            templateUrl: 'table.html',
             link: function ($scope, element, attr) {
 
                 $(document).on('syncMachine', function () {
