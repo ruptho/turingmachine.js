@@ -25,7 +25,7 @@
 // --------------------------- global variables ---------------------------
 
 var app_name = "turingmachine.js";
-var app_version = "1.0.1-stable";
+var app_version = "1.0.2-imported-reset";
 var app_author = "Lukas Prokop <admin@lukas-prokop.at>";
 
 // blank symbol for tapes, immutable const
@@ -5256,6 +5256,7 @@ angular.module('turing', [])
                         }
                     }
                     removeFromArray($scope.states, state);
+                    $scope.update() 
                 }
 
                 function deleteInput(index) {
@@ -5270,6 +5271,7 @@ angular.module('turing', [])
                         }
                     }
                     removeFromArray($scope.inputs, input);
+                    $scope.update() 
                 }
                 
                 function deleteElement(state, input) {
@@ -5284,6 +5286,7 @@ angular.module('turing', [])
                         }
                     }
                     removeFromArray($scope.inputs, input);
+                    // no update since already called from update method
                 }
 
                 function getElementAt(state, input) {
