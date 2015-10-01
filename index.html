@@ -1,187 +1,202 @@
 <!DOCTYPE html>
 <html data-ng-app="turingmachine.js">
-  <head>
+<head>
     <title>Turing machine</title>
-    <meta charset="utf-8" />
-    <link rel="stylesheet" href="turingmachine.css" />
-    <meta name="viewport" content="width=800, initial-scale=1.0" />
-    <meta name="application-name" content="turingmachine.js – turingmachine online simulator" />
-    <meta name="keywords" content="Turingmachine, computation, Alan Turing, simulator, play, run, html5, css3, javascript, js" />
+    <meta charset="utf-8"/>
+
+    <meta name="viewport" content="width=800, initial-scale=1.0"/>
+    <meta name="application-name" content="turingmachine.js – turingmachine online simulator"/>
+    <meta name="keywords"
+          content="Turingmachine, computation, Alan Turing, simulator, play, run, html5, css3, javascript, js"/>
     <script type="text/javascript" src="deps/jquery-1.11.3.js"></script>
     <script type="text/javascript" src="deps/jjv-1.0.2.js"></script>
     <script type="text/javascript" src="deps/angular.min.js"></script>
     <script type="text/javascript" src="turingmachine.js"></script>
-    <link rel="stylesheet" href="table.css" />
+
+    <link rel="stylesheet" href="normalize.css"/>
+    <link rel="stylesheet" href="turingmachine.css"/>
+    <link rel="stylesheet" href="table.css"/>
 
     <script type="text/javascript">
-      $(document).ready(function () {
-        app = main();
-      });
+        $(document).ready(function () {
+            app = main();
+        });
     </script>
-  </head>
+</head>
 
-  <body>
-    <div id="overlay">
-    </div>
-    <div id="overlay_text">
-      <h4><span class="action">Export</span></h4>
-      <p>
+<body>
+<div id="overlay">
+</div>
+<div id="overlay_text">
+    <h4><span class="action">Export</span></h4>
+
+    <p>
         Format: <select class="export_format">
-          <option value="json">JSON</option>
-          <option value="foswiki">Foswiki</option>
-        </select>
-          <button type="button" class="import">Import</button>
-          <button type="button" class="js-clipboard">Copy to clipboard</button>
-      </p>
-      <p class="input-text"><textarea class="data" rows="10" readonly></textarea></p>
-    </div>
+        <option value="json">JSON</option>
+        <option value="foswiki">Foswiki</option>
+    </select>
+        <button type="button" class="import">Import</button>
+        <button type="button" class="js-clipboard">Copy to clipboard</button>
+    </p>
+    <p class="input-text"><textarea class="data" rows="10" readonly></textarea></p>
+</div>
 
-    <div id="notes">
-      <h3>Notes</h3>
-    </div>
+<div id="notes">
+    <h3>Notes</h3>
+</div>
 
-    <header id="title">
-      <h1>Turingmachine</h1>
+<header id="title">
+    <h1>Turingmachine</h1>
 
-      <p>
-        <span id="caption">Turing machine for educational purposes</span> <br />
+    <p>
+        <span id="caption">Turing machine for educational purposes</span> <br/>
         2013–2015, <abbr title="Free/libre open source software">FLOSS</abbr> software,
         version 1.0.2
-      </p>
-    </header>
+    </p>
+</header>
 
-    <section class="turingmachine_desc">
-        <div class="description">
-            <noscript>
-                This web application will not work without Javascript! Sorry!
-            </noscript>
-            <h3 class="description_title">Help</h3>
-            <div class="description_text">
-                <p>Hi!</p>
-                <p>
-                    This project is all about <em>turingmachines</em>. What are turingmachines?
-                    They are a computational concept from <em>Theoretical Computer Science</em> (TCS)
-                    by Alan Turing (* 1912 † 1954). They illustrate one possible way to define computation
-                    and are as powerful as your computer. So how do they work?
-                </p>
-                <p>
-                    Above you can see the animated turing machine with several control elements underneath.
-                    The animation consists of a tape (with bright background color) and one cursor
-                    (winded green structure). The text at the left bottom of the animation is called
-                    <em>current state</em>.
-                    You can press "continue" to compute the next <em>step</em>. What are steps?
-                </p>
-                <p>
-                    At the bottom you can see a <em>transition table</em>. It defines a current situation,
-                    consisting of a read symbol and a state, and the next situation after one step has been
-                    performed. So when you press "continue" the program will read the symbol focused by the
-                    cursor and the current state. It will search for a line in the transition table matching
-                    those 2 values and will execute the corresponding result. The result consists of a symbol
-                    to write, a movement of the tape and a successor tape.
-                </p>
-                <p>
-                    You can edit the transition table yourself. Try it! 😊
-                </p>
-                <ul>
-                    <li><a href="https://en.wikipedia.org/wiki/Turingmachine" target="_blank">Wikipedia: Turingmachine</a></li>
-                    <li><a href="https://en.wikipedia.org/wiki/Alan_Turing" target="_blank">Wikipedia: Alan Turing</a></li>
-                </ul>
-            </div>
-            <div class="description_version">
-                <p><strong>Program version:</strong> <span>1.2 / 23rd of Aug 2015 / meisterluk</span></p>
-            </div>
+<section class="turingmachine_desc">
+    <div class="description">
+        <noscript>
+            This web application will not work without Javascript! Sorry!
+        </noscript>
+        <h3 class="description_title">Introduction</h3>
+
+        <div class="description_text">
+            <p>
+                This project is all about <em>turingmachines</em>. What are turingmachines?
+                They are a computational concept from <em>Theoretical Computer Science</em> (TCS)
+                by Alan Turing (* 1912 † 1954). They illustrate one possible way to define computation
+                and are as powerful as your computer. So how do they work?
+            </p>
+
+            <p>
+                Above you can see the animated turing machine with several control elements underneath.
+                The animation consists of a tape (with bright background color) and one cursor
+                (winded green structure). The text at the left bottom of the animation is called
+                <em>current state</em>.
+                You can press "continue" to compute the next <em>step</em>. What are steps?
+            </p>
+
+            <p>
+                At the bottom you can see a <em>transition table</em>. It defines a current situation,
+                consisting of a read symbol and a state, and the next situation after one step has been
+                performed. So when you press "continue" the program will read the symbol focused by the
+                cursor and the current state. It will search for a line in the transition table matching
+                those 2 values and will execute the corresponding result. The result consists of a symbol
+                to write, a movement of the tape and a successor tape.
+            </p>
+
+            <p>
+                You can edit the transition table yourself. Try it! 😊
+            </p>
+            <ul>
+                <li><a href="https://en.wikipedia.org/wiki/Turingmachine" target="_blank">Wikipedia: Turingmachine</a>
+                </li>
+                <li><a href="https://en.wikipedia.org/wiki/Alan_Turing" target="_blank">Wikipedia: Alan Turing</a></li>
+            </ul>
         </div>
-    </section>
+        <div class="description_version">
+            <p><strong>Program version:</strong> <span>1.2 / 23rd of Aug 2015 / meisterluk</span></p>
+        </div>
+    </div>
+</section>
 
-    <section class="turingmachine">
-      <h2 style="display:none">Turingmachine animation</h2>
+<section class="turingmachine centered">
+    <h2 style="display:none">Turingmachine animation</h2>
 
-      <div class="gear-animation" id="gear">
-        <img src="static/gear.svg" alt="Gear animation" width="150" height="150" />
-      </div>
+    <div class="gear-animation" id="gear">
+        <img src="static/gear.svg" alt="Gear animation" width="150" height="150"/>
+    </div>
 
-      <div class="io">
-        <button type="button" class="import_button">Import</button>
-        <button type="button" class="export_button">Export</button>
-      </div>
 
-      <label class="no_animation">
+    <label class="no_animation" for="wo_animation">
         disable animation
-        <input type="checkbox" name="wo_animation" />
-      </label>
+        <input type="checkbox" name="wo_animation" id="wo_animation"/>
+    </label>
+    <button type="button" class="import_button">Import</button>
+    <button type="button" class="export_button">Export</button>
 
-      <div class="drawings">
+
+    <div class="drawings">
         <div class="tape">
-          <img class="cursor" src="static/machine.png" alt="Machine" />
-          <div class="writer"></div>
+            <img class="cursor" src="static/machine.png" alt="Machine"/>
+
+            <div class="writer"></div>
         </div>
         <div class="state final undefined">Start</div>
         <div class="numbers"></div>
-      </div>
+    </div>
 
-      <div class="controls">
+    <div class="controls">
         <p>
-          <input type="text" class="steps_prev" size="4" value="1" /> steps
-            <input type="submit" class="control_prev button" value="back" />
-          <span class="space">|</span>
-          <input type="submit" class="control_next button" value="continue" />
-            <input type="text" class="steps_next" size="4" value="1" /> steps
+            <input type="text" class="steps_prev" size="4" value="1"/> steps
+            <button type="button" class="control_prev button">back</button>
+            <span class="space">|</span>
+            <button type="button" class="control_next button">continue</button>
+            <input type="text" class="steps_next" size="4" value="1"/> steps
 
-          <br />
-          <input type="submit" class="control_slower button" value="Slower" />
-          <input type="submit" class="control_reset button" value="Reset" />
-          <input type="submit" class="control_run button" value="Run" />
-          <input type="submit" class="control_faster button" value="Faster" />
+            <br/>
+            <button type="button" class="control_slower button">Slower</button>
+            <button type="button" class="control_reset button">Reset</button>
+            <button type="button" class="control_run button">Run</button>
+            <button type="button" class="control_faster button">Faster</button>
 
           <span class="interrupt">
-            <br />
-            <input type="submit" class="control_interrupt button" value="Abort run" />
+            <br/>
+            <button type="button" class="control_interrupt button">Abort run</button>
           </span>
         </p>
-      </div>
-    </section>
+    </div>
+</section>
 
-    <section class="turingmachine_data">
-        <h2>Data</h2>
-        <p>
-            <button type="button" class="tape_load">Load tape</button> <br/>
-            <input type="text" size="40" value="" class="tape" title="denote the cursor with surrounding *asterisks*" style="text-align:center" />
-        </p>
-        <p>
-            <button type="button" class="final_states_load">Set final states</button> <br />
-            <input type="text" size="40" value="" class="final_states" style="text-align:center" />
-        </p>
+<section class="turingmachine_data centered">
+    <h2>Data</h2>
 
-        <h2>Transition table</h2>
-        <div>
+    <p>
+        <button type="button" class="tape_load">Load tape</button>
+        <br/>
+        <input type="text" size="40" value="" class="tape" title="denote the cursor with surrounding *asterisks*"
+               style="text-align:center"/>
+    </p>
+    <p>
+        <button type="button" class="final_states_load">Set final states</button>
+        <br/>
+        <input type="text" size="40" value="" class="final_states" style="text-align:center"/>
+    </p>
+
+    <h2>Transition table</h2>
+
+    <div>
         <div class="turing-table"></div>
-        </div>
-    </section>
+    </div>
+</section>
 
-    <section class="turingmachine_meta">
+<section class="turingmachine_meta centered">
 
-        <p>
-            Load example program:
-            <select class="example">
-                <option data-none="true">no example programs available</option>
-            </select>
-            <button type="button" class="example_load">Load to visualization</button><br />
-            Run testcase:
-            <select class="testcase">
-                <option value="null">no testcase available</option>
-            </select>
-            <button type="button" class="testcase_load">Load to visualization</button>
-            <button type="button" type="submit" class="testcase_runall">Run All</button>
-        </p>
+    <p>
+        Load example program:
+        <select class="example">
+            <option data-none="true">no example programs available</option>
+        </select>
+        <button type="button" class="example_load">Load to visualization</button>
+        <br/>
+        Run testcase:
+        <select class="testcase">
+            <option value="null">no testcase available</option>
+        </select>
+        <button type="button" class="testcase_load">Load to visualization</button>
+        <button type="button" type="submit" class="testcase_runall">Run All</button>
+    </p>
 
-        <h3>Runtime properties</h3>
-        <table>
-            <thead>
-            <tr>
-                <td style="text-align:right">Set machine name:</td>
-                <td style="text-align:left"><input type="text" class="machine_name" size="20" maxlength="255" /></td>
-            </tr>
-        </table>
-    </section>
-  </body>
+    <h3>Runtime properties</h3>
+    <table>
+        <thead>
+        <tr>
+            <td style="text-align:right">Set machine name:</td>
+            <td style="text-align:left"><input type="text" class="machine_name" size="20" maxlength="255"/></td>
+        </tr>
+    </table>
+</section>
+</body>
 </html>

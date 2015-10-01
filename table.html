@@ -1,24 +1,24 @@
 <table id="edittable" class="table table-bordered table-hover">
     <thead>
     <tr>
-        <th></th>
-        <th></th>
+        <th class="noborder"></th>
+        <th class="noborder"></th>
         <th ng-repeat="c in inputs track by $index">
             <button class="btn btn-xs btn-danger" ng-click="deleteInput($index)">
-                <span class="glyphicon glyphicon-remove"></span>
-                <span class="glyphicon glyphicon-arrow-down"></span>
+                <span class="icon icon-remove"></span>
+                <span class="icon icon-arrow-down"></span>
             </button>
         </th>
     </tr>
     <tr>
-        <th></th>
-        <th></th>
+        <th class="noborder"></th>
+        <th class="noborder"></th>
         <th ng-repeat="c in inputs track by $index">
             <input class="inline full" type="text" ng-model="c"
                    size="" unique-input="inputs" program="data" index="$index" ng-change="update()">
         </th>
         <th>
-            <button class="btn btn-default" ng-click="addInput()"><span class="glyphicon glyphicon-plus"></span>
+            <button class="btn btn-default" ng-click="addInput()"><span class="icon icon-plus"></span>
                 Input
             </button>
         </th>
@@ -28,8 +28,8 @@
     <tr ng-repeat="row in states track by $index">
         <th>
             <button class="btn btn-xs btn-danger" ng-click="deleteState($index)"><span
-                    class="glyphicon glyphicon-remove"></span>
-                <span class="glyphicon glyphicon-arrow-right"></span></button>
+                    class="icon icon-remove"></span>
+                <span class="icon icon-arrow-right"></span></button>
         </th>
         <th scope="row" ng-init="rowIndex=$index">
             <input class="inline full" type="text" ng-model="row"
@@ -38,11 +38,11 @@
         <td ng-repeat="col in inputs track by $index" row="row" column="col"
             ng-init="data=getElementAt(row,col)" state-editor="getElementAt(row,col)" callback="updateElementAt"></td>
     <tr>
-        <td colspan="2">
-            <button class="btn btn-default" ng-click="addState()"><span class="glyphicon glyphicon-plus"></span>
+        <th colspan="2">
+            <button class="btn btn-default" ng-click="addState()"><span class="icon icon-plus"></span>
                 State
             </button>
-        </td>
+        </th>
     </tr>
     </tbody>
 </table>
