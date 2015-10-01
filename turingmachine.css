@@ -100,14 +100,14 @@
 
 
     button {
-        background-color: #efefef;
+        background-color: #CEE2BE;
         font-weight: normal;
         cursor: pointer;
         color:#000000;
     }
 
     button:hover, button:focus {
-        background-color: #dedede;
+        background-color: #BDC5AD;
         font-weight: normal;
         cursor: pointer;
     }
@@ -120,7 +120,8 @@
         -moz-box-shadow: inset 0 0 3px rgba(100, 100, 100, 0.2);
         -webkit-box-shadow: inset 0 0 3px rgba(100, 100, 100, 0.2);
         box-shadow: inset 0 0 3px rgba(100, 100, 100, 0.2);
-        background-color: #fafafa;
+        background-color: #fff;
+        color:#444444;
         padding: 0 8px;
         outline: 0;
         text-align: center;
@@ -161,8 +162,7 @@
         top: 0;
         right: 0;
         bottom: 0;
-        background-color: #AAA;
-        opacity: 0.5;
+        background-color: rgba(0,0,0,0.5);
         filter: alpha(opacity=50);
         z-index: 100;
         display: none;
@@ -175,9 +175,9 @@
         left: calc(50% - 350px);
         width: 660px;
         min-height: 300px;
-        padding: 20px;
-        background-color: #EEE;
-        border-radius: 5px;
+        padding: 24px;
+        background-color: #f9f9f9;
+        border-radius: 3px;
         z-index: 101;
         display: none;
     }
@@ -194,7 +194,7 @@
         bottom: 0;
         left: 0;
         right: 0;
-        top: 80px;
+        top: 90px;
         margin: 0;
 
     }
@@ -205,7 +205,7 @@
         display: block;
         width: 100%;
         height: 100%;
-        line-height: 1.4em;
+        line-height: 1.33em;
     }
 
     #title h1 {
