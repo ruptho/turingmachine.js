@@ -13,7 +13,7 @@
     <tr>
         <th class="noborder"></th>
         <th class="noborder"></th>
-        <th ng-repeat="c in inputs track by $index">
+        <th ng-repeat="c in inputs track by $index" class="th-input">
             <input class="inline full" type="text" ng-model="c"
                    size="" unique-input="inputs" program="data" index="$index" ng-change="update()">
         </th>
@@ -31,7 +31,7 @@
                     class="icon icon-remove"></span>
                 <span class="icon icon-arrow-right"></span></button>
         </th>
-        <th scope="row" ng-init="rowIndex=$index">
+        <th scope="row" ng-init="rowIndex=$index" class="th-input">
             <input class="inline full" type="text" ng-model="row"
                    size="" unique-state="states" program="data" index="rowIndex" ng-change="update()">
         </th>
