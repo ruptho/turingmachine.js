@@ -25,8 +25,7 @@
 </head>
 
 <body>
-<div id="overlay">
-</div>
+<div id="overlay"></div>
 <div id="overlay_text">
     <h4><span class="action">Export</span></h4>
 
@@ -97,7 +96,8 @@
             </ul>
         </div>
         <div class="description_version">
-            <p><strong>Program version:</strong> <span>1.2 / Sep 2015 / meisterluk / modified by ruptho & plechi</span></p>
+            <p><strong>Program version:</strong> <span>1.2 / Oct 2015 / meisterluk / modified by ruptho & plechi</span>
+            </p>
         </div>
     </div>
 </section>
@@ -109,14 +109,15 @@
         <img src="static/gear.svg" alt="Gear animation" width="150" height="150"/>
     </div>
 
+    <p>
 
-    <label class="no_animation" for="wo_animation">
-        disable animation
-        <input type="checkbox" name="wo_animation" id="wo_animation"/>
-    </label>
-    <button type="button" class="import_button">Import</button>
-    <button type="button" class="export_button">Export</button>
-
+        <label class="no_animation" for="wo_animation">
+            disable animation
+            <input type="checkbox" name="wo_animation" id="wo_animation"/>
+        </label>
+        <button type="button" class="import_button">Import</button>
+        <button type="button" class="export_button">Export</button>
+    </p>
 
     <div class="drawings">
         <div class="tape">
@@ -160,29 +161,30 @@
     <h2>Data</h2>
 
     <p>
-        <button type="button" class="tape_load">Load tape</button>
-        <br/>
-        <input type="text" size="40" value="" class="tape" title="denote the cursor with surrounding *asterisks*"
+        <label for="tape">Tape</label>
+        <input type="text" size="40" value="" id="tape" class="tape"
+               title="denote the cursor with surrounding *asterisks*"
                style="text-align:center"/>
+        <button type="button" class="tape_load">Load tape</button>
     </p>
     <p>
-        <button type="button" class="final_states_load">Set final states</button>
-        <br/>
+        <label for="final_states">Final states</label>
         <input type="text" size="40" value="" class="final_states" style="text-align:center"/>
+        <button type="button" id="final_states" class="final_states_load">Set final states</button>
     </p>
 </section>
 
 <section class="turingmachine_meta centered">
 
     <p>
-        Load example program:
-        <select class="example">
+        <label for="example_program">Load example program</label>
+        <select class="example" id="example_program">
             <option data-none="true">no example programs available</option>
         </select>
         <button type="button" class="example_load">Load to visualization</button>
         <br/>
-        Run testcase:
-        <select class="testcase">
+        <label for="testcase">Run testcase</label>
+        <select class="testcase" id="testcase">
             <option value="null">no testcase available</option>
         </select>
         <button type="button" class="testcase_load">Load to visualization</button>
@@ -190,13 +192,8 @@
     </p>
 
     <h3>Runtime properties</h3>
-    <table>
-        <thead>
-        <tr>
-            <td style="text-align:right">Set machine name:</td>
-            <td style="text-align:left"><input type="text" class="machine_name" size="20" maxlength="255"/></td>
-        </tr>
-    </table>
+    <label for="machine_name">Machine name</label>
+    <input type="text" class="machine_name" id="machine_name" size="20" maxlength="255"/>
 </section>
 </body>
 </html>

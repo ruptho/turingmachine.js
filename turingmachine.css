@@ -134,8 +134,8 @@
     }
 
     label {
-        line-height: 1.45em;
-        margin: 0 4px;
+        font-weight: 600;
+        margin-right: 3px;
     }
 
     /*button {
