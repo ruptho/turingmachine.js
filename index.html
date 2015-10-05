@@ -111,9 +111,9 @@
 
     <p>
 
-        <label class="no_animation" for="wo_animation">
+        <label class="no_animation" for="input_wo_animation">
             disable animation
-            <input type="checkbox" name="wo_animation" id="wo_animation"/>
+            <input type="checkbox" name="wo_animation" id="input_wo_animation"/>
         </label>
         <button type="button" class="import_button">Import</button>
         <button type="button" class="export_button">Export</button>
@@ -161,24 +161,24 @@
     <h2>Data</h2>
 
     <p>
-        <label for="tape">Tape</label>
-        <input type="text" size="40" value="" id="tape" class="tape"
+        <label for="input_tape">Tape</label>
+        <input type="text" size="40" value="" id="input_tape" class="tape"
                title="denote the cursor with surrounding *asterisks*"
                style="text-align:center"/>
         <button type="button" class="tape_load">Load tape</button>
     </p>
     <p>
-        <label for="final_states">Final states</label>
+        <label for="input_final_states">Final states</label>
         <input type="text" size="40" value="" class="final_states" style="text-align:center"/>
-        <button type="button" id="final_states" class="final_states_load">Set final states</button>
+        <button type="button" id="input_final_states" class="final_states_load">Set final states</button>
     </p>
 </section>
 
 <section class="turingmachine_meta centered">
 
     <p>
-        <label for="example_program">Load example program</label>
-        <select class="example" id="example_program">
+        <label for="input_example_program">Load example program</label>
+        <select class="example" id="input_example_program">
             <option data-none="true">no example programs available</option>
         </select>
         <button type="button" class="example_load">Load to visualization</button>
@@ -192,8 +192,8 @@
     </p>
 
     <h3>Runtime properties</h3>
-    <label for="machine_name">Machine name</label>
-    <input type="text" class="machine_name" id="machine_name" size="20" maxlength="255"/>
+    <label for="input_machine_name">Machine name</label>
+    <input type="text" class="machine_name" id="input_machine_name" size="20" maxlength="255"/>
 </section>
 </body>
 </html>
