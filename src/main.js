@@ -93,7 +93,7 @@ function main()
     }
     console.info("Markets considered: ", markets);
 
-    var programs = ['2bit-xor', '2bit-addition', '4bit-addition', 'mirroring', 'zero-writer'];
+    var programs = ['empty', '2bit-xor', 'zero-writer'];
     var count_default_programs = 5;
     if (program_matches) {
         var p = program_matches[1].split(';');

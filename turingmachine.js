@@ -4006,7 +4006,6 @@ var TuringManager = function (default_market, markets, ui_notes, ui_tm, ui_meta,
   // UI elements
   var ui_programs = ui_meta.find("select.example");
   var ui_testcases = ui_meta.find("select.testcase");
-  var ui_transitiontable = ui_data.find(".transition_table");
 
   // @callback programLoading(program)
   //   [invoked when the market is about to load]
@@ -5043,7 +5042,7 @@ function main()
     }
     console.info("Markets considered: ", markets);
 
-    var programs = ['2bit-xor', '2bit-addition', '4bit-addition', 'mirroring', 'zero-writer'];
+    var programs = ['empty', '2bit-xor', 'zero-writer'];
     var count_default_programs = 5;
     if (program_matches) {
         var p = program_matches[1].split(';');
@@ -5198,9 +5197,10 @@ angular.module('turingmachine.js', []);
                 $scope.states = [];
 
                 $scope.update = function () {
-                    console.log("update machine from table");
+
                     window.app.tm().getProgram().clear();
                     window.app.tm().getProgram().fromJSON($scope.data);
+                    console.log("updated machine from table",$scope.data);
                 }
 
                 $scope.load = function () {

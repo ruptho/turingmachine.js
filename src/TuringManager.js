@@ -9,7 +9,6 @@ var TuringManager = function (default_market, markets, ui_notes, ui_tm, ui_meta,
   // UI elements
   var ui_programs = ui_meta.find("select.example");
   var ui_testcases = ui_meta.find("select.testcase");
-  var ui_transitiontable = ui_data.find(".transition_table");
 
   // @callback programLoading(program)
   //   [invoked when the market is about to load]

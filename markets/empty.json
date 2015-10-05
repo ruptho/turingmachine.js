@@ -1,0 +1,15 @@
+{
+  "title": "00 - Empty",
+  "description" : [
+  ],
+  "version" : "0.1, Gdi Tutors",
+  "tape" : {
+    "blank" : "_",
+    "cursor" : 0,
+    "data" : []
+  },
+  "program": [],
+  "state" : "Start",
+  "final_states" : ["End"],
+  "testcases" : []
+}

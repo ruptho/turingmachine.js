@@ -18,9 +18,10 @@
                 $scope.states = [];
 
                 $scope.update = function () {
-                    console.log("update machine from table");
+
                     window.app.tm().getProgram().clear();
                     window.app.tm().getProgram().fromJSON($scope.data);
+                    console.log("updated machine from table",$scope.data);
                 }
 
                 $scope.load = function () {
