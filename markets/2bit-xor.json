@@ -6,7 +6,7 @@
   ],
   "version" : "1.2 / 23rd of Aug 2015 / meisterluk",
   "tape" : {
-    "blank" : " ",
+    "blank" : "_",
     "cursor" : 0,
     "data" : ["0", "0"]
   },
