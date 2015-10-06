@@ -8,7 +8,7 @@
                 column: '=',
                 row: '='
             },
-            template: '<input class="inline state-input" type="text" ng-model="data[0]""/>' +
+            template: '<input class="inline state-input" ng-maxlength="1" type="text" ng-model="data[0]""/>' +
             '<select ng-model="data[1]" class="state-movement">' +
             '<option></option>' +
             '<option>Stop</option>' +

@@ -15,6 +15,7 @@
         <th class="noborder"></th>
         <th ng-repeat="c in inputs track by $index" class="th-input">
             <input class="inline full" type="text" ng-model="c"
+                   ng-maxlength="1"
                    size="" unique-input="inputs" program="data" index="$index" ng-change="update()">
         </th>
         <th>
