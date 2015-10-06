@@ -68,6 +68,20 @@ abbr {
     border-bottom: none;
 }
 
+footer{
+    margin:4em 0 2em;
+    font-size: 90%;
+    color:#888888;
+}
+
+footer a{
+     color:#666666 !important;
+ }
+
+footer p{
+    color:#888888 !important;
+}
+
 button, select {
     line-height: 1.2em;
     display: inline-block;

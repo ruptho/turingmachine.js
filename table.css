@@ -47,22 +47,6 @@ input.ng-invalid, input.ng-invalid:focus {
     box-shadow: 0 0 5px #ff0000;
 }
 
-.icon-plus:before {
-    content: '\2795 New';
-}
-
-.icon-remove:before {
-    content: '\2718';
-}
-
-.icon-arrow-down:before {
-    content: '\2193';
-}
-
-.icon-arrow-right:before {
-    content: '\2192';
-}
-
 .turing-table {
     overflow-x: scroll;
     width: 100%;

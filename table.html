@@ -4,9 +4,9 @@
         <th class="noborder"></th>
         <th class="noborder"></th>
         <th ng-repeat="c in inputs track by $index">
-            <button class="btn btn-xs btn-danger" ng-click="deleteInput($index)">
-                <span class="icon icon-remove"></span>
-                <span class="icon icon-arrow-down"></span>
+            <button ng-click="deleteInput($index)">
+                <span class="fa fa-times"></span>
+                <span class="fa fa-chevron-down"></span>
             </button>
         </th>
     </tr>
@@ -19,16 +19,16 @@
                    size="" unique-input="inputs" program="data" index="$index" ng-change="update()">
         </th>
         <th>
-            <button class="btn btn-default" ng-click="addInput()"><span class="icon icon-plus"></span></button>
+            <button ng-click="addInput()"><span class="fa fa-plus"></span></button>
         </th>
     </tr>
     </thead>
     <tbody>
     <tr ng-repeat="row in states track by $index">
         <th>
-            <button class="btn btn-xs btn-danger" ng-click="deleteState($index)"><span
-                    class="icon icon-remove"></span>
-                <span class="icon icon-arrow-right"></span></button>
+            <button ng-click="deleteState($index)"><span
+                    class="fa fa-times"></span>
+                <span class="fa fa-chevron-right"></span></button>
         </th>
         <th scope="row" ng-init="rowIndex=$index" class="th-input">
             <input class="inline full" type="text" ng-model="row"
@@ -38,7 +38,7 @@
             ng-init="data=getElementAt(row,col)" state-editor="getElementAt(row,col)" callback="updateElementAt"></td>
     <tr>
         <th colspan="2">
-            <button class="btn btn-default" ng-click="addState()"><span class="icon icon-plus"></span></button>
+            <button ng-click="addState()"><span class="fa fa-plus"></span></button>
         </th>
     </tr>
     </tbody>

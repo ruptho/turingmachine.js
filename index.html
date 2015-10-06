@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="normalize.css"/>
     <link rel="stylesheet" href="turingmachine.css"/>
     <link rel="stylesheet" href="table.css"/>
+    <link rel="stylesheet" href="static/icons/css/font-awesome.min.css"/>
 
     <script type="text/javascript">
         $(document).ready(function ($) {
@@ -133,8 +134,8 @@
             disable animation
             <input type="checkbox" name="wo_animation" id="input_wo_animation"/>
         </label>
-        <button type="button" class="import_button">Import</button>
-        <button type="button" class="export_button">Export</button>
+        <button type="button" class="import_button"><span class="fa fa-download"></span> Import</button>
+        <button type="button" class="export_button"><span class="fa fa-upload"></span> Export</button>
     </p>
 
     <div class="drawings">
@@ -150,20 +151,20 @@
     <div class="controls">
         <p>
             <input type="text" class="steps_prev" size="4" value="1"/> steps
-            <button type="button" class="control_prev button">back</button>
+            <button type="button" class="control_prev button"><span class="fa fa-step-backward"></span> back</button>
             <span class="space"></span>
-            <button type="button" class="control_next button">continue</button>
+            <button type="button" class="control_next button">continue <span class="fa fa-step-forward"></span></button>
             <input type="text" class="steps_next" size="4" value="1"/> steps
 
             <br/>
-            <button type="button" class="control_slower button">Slower</button>
-            <button type="button" class="control_reset button">Reset</button>
-            <button type="button" class="control_run button">Run</button>
-            <button type="button" class="control_faster button">Faster</button>
+            <button type="button" class="control_slower button"><span class="fa fa-backward"></span> Slower</button>
+            <button type="button" class="control_reset button"><span class="fa fa-refresh"></span> Reset</button>
+            <button type="button" class="control_run button"><span class="fa fa-play"></span> Run</button>
+            <button type="button" class="control_faster button">Faster <span class="fa fa-forward"></span></button>
 
           <span class="interrupt">
             <br/>
-            <button type="button" class="control_interrupt button">Abort run</button>
+            <button type="button" class="control_interrupt button"><span class="fa fa-stop"></span> Abort run</button>
           </span>
         </p>
     </div>
@@ -231,5 +232,9 @@
         <p class="input-info">The name of your machine (for import/export).</p>
     </div>
 </section>
+
+<footer>
+    <p>Created by meisterluk, modified for GdI by ruptho & plechi. Icons by <a href="https://fortawesome.github.io/" target="_blank">Fontawesome</a>.</p>
+</footer>
 </body>
 </html>
