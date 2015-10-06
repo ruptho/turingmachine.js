@@ -1,5 +1,5 @@
 {
-  "title": "01 - 2-bit XOR",
+  "title": "02 - 2-bit XOR",
   "description" : [
     "XOR (excluded OR) is a fundamental logical operator. Taking two input values, the output value is true whenever both inputs differ. This turingmachine starts with a tape where two zeros are right to the cursor position. Because the zeros are equivalent, the result of the operator is zero as well and is written to the right of the values. If the values are 01, the result 1 has to be written.",
     "The transition table is already a working implementation for the problem."

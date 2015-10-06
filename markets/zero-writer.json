@@ -1,5 +1,5 @@
 {
-  "title" : "18 - Zero Writer",
+  "title" : "03 - Zero Writer",
   "description" : [
     "This turingmachine gets a positive integer expressed as a binary number as input. It writes as many zeros as the value of the given number to the right side of the number.",
     "*Example:*  ..._ 1 0 1 _ _ _ _ _...  results in  ..._ 1 0 1 _ 0 0 0 0 0 _..."
