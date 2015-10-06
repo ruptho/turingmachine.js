@@ -29,13 +29,13 @@ input.inline.full{
 }
 
 input.state-input{
-    width:30px;
+    width:40px;
 }
 input.state-movement{
     width:70px;
 }
 input.state-nextstate{
-    width:100px;
+    width:120px;
 }
 
 input.ng-invalid,input.ng-invalid:focus{
@@ -81,9 +81,14 @@ input.ng-invalid,input.ng-invalid:focus{
     text-align: left;
 }
 
-.turing-table table td,.turing-table table th.th-input{
-    width:200px;
-    min-width: 200px;
+.turing-table table td{
+    width:240px;
+    min-width: 240px;
+}
+
+.turing-table table th.th-input{
+    width:130px;
+    min-width: 130px;
 }
 
 .turing-table table td,
