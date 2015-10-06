@@ -178,6 +178,21 @@ code{
     margin:0 4px;
 }
 
+
+.info-warning{
+    background-color: #f6d6d5;
+    color: #761c19;
+    text-align: left;
+    border-left:3px solid #d9534f;
+    padding: 1em 1em;
+    margin: 1.5em 0;
+    font-weight: 400;
+}
+
+.info-warning>*{
+    color: #761c19;
+}
+
 /*button {
   background: -webkit-linear-gradient(to bottom, #CEE2BF 0%, #C4D4B7 100%) repeat scroll 0 0 rgba(0, 0, 0, 0);
   background:    -moz-linear-gradient(to bottom, #CEE2BF 0%, #C4D4B7 100%) repeat scroll 0 0 rgba(0, 0, 0, 0);

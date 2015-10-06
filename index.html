@@ -18,8 +18,11 @@
     <link rel="stylesheet" href="table.css"/>
 
     <script type="text/javascript">
-        $(document).ready(function () {
+        $(document).ready(function ($) {
             app = main();
+            if (navigator.userAgent.toLowerCase().indexOf('safari/') > -1 && navigator.vendor.toLowerCase().indexOf("apple") > -1) {
+                $('.alert-safari').show();
+            }
         });
     </script>
 </head>
@@ -56,9 +59,7 @@
 
 <section class="turingmachine_desc">
     <div class="description">
-        <noscript>
-            This web application will not work without Javascript! Sorry!
-        </noscript>
+
         <h3 class="description_title">Introduction</h3>
 
         <div class="description_text">
@@ -107,6 +108,23 @@
 
     <div class="gear-animation" id="gear">
         <img src="static/gear.svg" alt="Gear animation" width="150" height="150"/>
+    </div>
+
+    <noscript>
+        <div class="info-warning">
+            <h3>Javascript not enabled</h3>
+
+            <p><strong>This web application will not work without Javascript! Sorry!</strong></p>
+        </div>
+    </noscript>
+
+    <div class="info-warning alert-safari" style="display: none;">
+        <h3>Safari users</h3>
+
+        <p>Due to problems with animations, the Safari Webbrowser is currently not supported. We are trying to fix this
+            in the future,
+            for now you can <strong>disable animations</strong> or <strong>switch to another browser</strong> (tested
+            with Chromium/Chrome/Firefox).</p>
     </div>
 
     <p class="form" style="float:right;padding:0 1em;">
@@ -167,7 +185,8 @@
                    title="denote the cursor with surrounding *asterisks*"
                    style="text-align:center"/>
             <button type="button" class="tape_load">Load tape</button>
-            <p class="input-info">Load tape, comma separated values, mark cursor position with surrounding *asterisks*.</p>
+            <p class="input-info">Load tape, comma separated values, mark cursor position with surrounding
+                *asterisks*.</p>
         </div>
         <div class="input-group">
             <label for="input_final_states">Final states</label>
@@ -208,6 +227,7 @@
     <div class="form">
         <label for="input_machine_name">Machine name</label>
         <input type="text" class="machine_name" id="input_machine_name" size="20" maxlength="255"/>
+
         <p class="input-info">The name of your machine (for import/export).</p>
     </div>
 </section>
