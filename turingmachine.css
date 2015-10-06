@@ -143,6 +143,12 @@ button:hover, button:focus {
     cursor: pointer;
 }
 
+button:disabled{
+    color:#888888;
+    background-color:#eeeeee;
+    cursor: not-allowed;
+}
+
 select {
     outline: 0;
 }

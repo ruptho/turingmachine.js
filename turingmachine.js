@@ -5158,14 +5158,14 @@ angular.module('turingmachine.js', []);
                 column: '=',
                 row: '='
             },
-            template: '<input class="inline state-input" ng-maxlength="1" type="text" ng-model="data[0]""/>' +
-            '<select ng-model="data[1]" class="state-movement">' +
+            template: '<input class="inline state-input" ng-maxlength="1" type="text" ng-model="data[0]" ng-model-options="{ debounce: 500 }"/>' +
+            '<select ng-model="data[1]" class="state-movement" ng-model-options="{ debounce: 500 }">' +
             '<option></option>' +
             '<option>Stop</option>' +
             '<option>Left</option>' +
             '<option>Right</option>' +
             '</select>' +
-            '<input class="inline state-nextstate" type="text" ng-model="data[2]""/>',
+            '<input class="inline state-nextstate" type="text" ng-model="data[2]" ng-model-options="{ debounce: 500 }"/>',
             link: function (scope, element, attr) {
                 scope.data = scope.stateEditor || [];
                 scope.$watchCollection('data', function (data) {
@@ -5192,25 +5192,34 @@ angular.module('turingmachine.js', []);
                     })
                 });
 
+                window.app.manager().addEventListener('programActivated', function () {
+                    $scope.undoHistory = [];
+                });
+
                 $scope.data = []
                 $scope.inputs = [];
                 $scope.states = [];
 
+
+                var undoTimeout = null;
+
                 $scope.update = function () {
+
+                    $timeout.cancel(undoTimeout);
+
+                    undoTimeout = $timeout(function () {
+                        undoStep();
+                    }, 50);
+
 
                     window.app.tm().getProgram().clear();
                     window.app.tm().getProgram().fromJSON($scope.data);
-                    console.log("updated machine from table",$scope.data);
+                    console.log("updated machine from table", $scope.data);
                 }
 
                 $scope.load = function () {
-                    $scope.data = []
-                    $scope.inputs = [];
-                    $scope.states = [];
                     $timeout(function () {
-                        $scope.data = window.app.tm().getProgram().toJSON();
-                        console.log("updated table");
-                        init();
+                        init(window.app.tm().getProgram().toJSON());
                     });
                 }
 
@@ -5223,12 +5232,22 @@ angular.module('turingmachine.js', []);
 
                 $scope.change = change;
 
-                function init() {
-                    for (var i in $scope.data) {
-                        var programEntry = $scope.data[i];
-                        addToSet($scope.inputs, programEntry[0]);
-                        addToSet($scope.states, programEntry[1]);
-                    }
+                function init(data) {
+                    $scope.inputs = [];
+                    $scope.states = [];
+
+                    $timeout(function () {
+
+                        $scope.data = data;
+                        console.log("updated table");
+
+                        for (var i in $scope.data) {
+                            var programEntry = $scope.data[i];
+                            addToSet($scope.inputs, programEntry[0]);
+                            addToSet($scope.states, programEntry[1]);
+                        }
+
+                    });
                 }
 
                 function addToSet(array, element) {
@@ -5346,6 +5365,27 @@ angular.module('turingmachine.js', []);
                             i--;
                         }
                     }
+                }
+
+                //undo mechanism
+
+                $scope.undoHistory = [];
+                $scope.undo = undo;
+
+                $scope.canUndo = function () {
+                    return !($scope.undoHistory.length > 1);
+                }
+
+
+                function undo() {
+                    $scope.undoHistory.pop();
+                    init($scope.undoHistory.pop());
+                }
+
+                function undoStep() {
+                    console.log("undo", $scope.undoCurrent, $scope.undoHistory)
+                    $scope.undoHistory.push(deepCopy($scope.data));
+                    //$scope.undoCurrent++;
                 }
 
             }

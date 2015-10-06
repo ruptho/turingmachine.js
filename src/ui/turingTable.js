@@ -13,25 +13,34 @@
                     })
                 });
 
+                window.app.manager().addEventListener('programActivated', function () {
+                    $scope.undoHistory = [];
+                });
+
                 $scope.data = []
                 $scope.inputs = [];
                 $scope.states = [];
 
+
+                var undoTimeout = null;
+
                 $scope.update = function () {
+
+                    $timeout.cancel(undoTimeout);
+
+                    undoTimeout = $timeout(function () {
+                        undoStep();
+                    }, 50);
+
 
                     window.app.tm().getProgram().clear();
                     window.app.tm().getProgram().fromJSON($scope.data);
-                    console.log("updated machine from table",$scope.data);
+                    console.log("updated machine from table", $scope.data);
                 }
 
                 $scope.load = function () {
-                    $scope.data = []
-                    $scope.inputs = [];
-                    $scope.states = [];
                     $timeout(function () {
-                        $scope.data = window.app.tm().getProgram().toJSON();
-                        console.log("updated table");
-                        init();
+                        init(window.app.tm().getProgram().toJSON());
                     });
                 }
 
@@ -44,12 +53,22 @@
 
                 $scope.change = change;
 
-                function init() {
-                    for (var i in $scope.data) {
-                        var programEntry = $scope.data[i];
-                        addToSet($scope.inputs, programEntry[0]);
-                        addToSet($scope.states, programEntry[1]);
-                    }
+                function init(data) {
+                    $scope.inputs = [];
+                    $scope.states = [];
+
+                    $timeout(function () {
+
+                        $scope.data = data;
+                        console.log("updated table");
+
+                        for (var i in $scope.data) {
+                            var programEntry = $scope.data[i];
+                            addToSet($scope.inputs, programEntry[0]);
+                            addToSet($scope.states, programEntry[1]);
+                        }
+
+                    });
                 }
 
                 function addToSet(array, element) {
@@ -167,6 +186,27 @@
                             i--;
                         }
                     }
+                }
+
+                //undo mechanism
+
+                $scope.undoHistory = [];
+                $scope.undo = undo;
+
+                $scope.canUndo = function () {
+                    return !($scope.undoHistory.length > 1);
+                }
+
+
+                function undo() {
+                    $scope.undoHistory.pop();
+                    init($scope.undoHistory.pop());
+                }
+
+                function undoStep() {
+                    console.log("undo", $scope.undoCurrent, $scope.undoHistory)
+                    $scope.undoHistory.push(deepCopy($scope.data));
+                    //$scope.undoCurrent++;
                 }
 
             }
