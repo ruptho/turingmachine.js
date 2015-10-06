@@ -109,7 +109,7 @@
         <img src="static/gear.svg" alt="Gear animation" width="150" height="150"/>
     </div>
 
-    <p>
+    <p class="form">
 
         <label class="no_animation" for="input_wo_animation">
             disable animation
@@ -133,7 +133,7 @@
         <p>
             <input type="text" class="steps_prev" size="4" value="1"/> steps
             <button type="button" class="control_prev button">back</button>
-            <span class="space">|</span>
+            <span class="space"></span>
             <button type="button" class="control_next button">continue</button>
             <input type="text" class="steps_next" size="4" value="1"/> steps
 
@@ -160,14 +160,14 @@
 
     <h2>Data</h2>
 
-    <p>
+    <p class="form">
         <label for="input_tape">Tape</label>
         <input type="text" size="40" value="" id="input_tape" class="tape"
                title="denote the cursor with surrounding *asterisks*"
                style="text-align:center"/>
         <button type="button" class="tape_load">Load tape</button>
     </p>
-    <p>
+    <p class="form">
         <label for="input_final_states">Final states</label>
         <input type="text" size="40" value="" class="final_states" style="text-align:center"/>
         <button type="button" id="input_final_states" class="final_states_load">Set final states</button>
@@ -176,7 +176,9 @@
 
 <section class="turingmachine_meta centered">
 
-    <p>
+    <h2>Example programs</h2>
+
+    <p class="form">
         <label for="input_example_program">Load example program</label>
         <select class="example" id="input_example_program">
             <option data-none="true">no example programs available</option>
@@ -191,9 +193,12 @@
         <button type="button" type="submit" class="testcase_runall">Run All</button>
     </p>
 
-    <h3>Runtime properties</h3>
-    <label for="input_machine_name">Machine name</label>
-    <input type="text" class="machine_name" id="input_machine_name" size="20" maxlength="255"/>
+    <h2>Runtime properties</h2>
+
+    <p class="form">
+        <label for="input_machine_name">Machine name</label>
+        <input type="text" class="machine_name" id="input_machine_name" size="20" maxlength="255"/>
+    </p>
 </section>
 </body>
 </html>

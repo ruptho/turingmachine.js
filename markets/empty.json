@@ -8,7 +8,7 @@
     "cursor" : 0,
     "data" : []
   },
-  "program": [],
+  "program": [["_","Start","_","STOP","End"]],
   "state" : "Start",
   "final_states" : ["End"],
   "testcases" : []
