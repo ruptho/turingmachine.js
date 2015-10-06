@@ -1,4 +1,3 @@
-
 /*input.inline{
     padding:8px 1em;
     border: none;
@@ -18,92 +17,88 @@ input.inline:focus {
 }
 */
 
-input.inline.full{
-    height:100%;
-    width:100%;
-    display:block;
+input.inline.full {
+    height: 100%;
+    width: 100%;
+    display: block;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
-    margin:0;
+    margin: 0;
 }
 
-input.state-input{
-    width:40px;
-}
-input.state-movement{
-    width:70px;
-}
-input.state-nextstate{
-    width:120px;
+input.state-input {
+    width: 40px;
 }
 
-input.ng-invalid,input.ng-invalid:focus{
+input.state-movement {
+    width: 70px;
+}
+
+input.state-nextstate {
+    width: 120px;
+}
+
+input.ng-invalid, input.ng-invalid:focus {
     /*background-color:#ffe6e6 !important;*/
-    border:1px solid #ff0000;
-    -moz-box-shadow:  0 0 5px #ff0000;
-    -webkit-box-shadow:  0 0 5px #ff0000;
-    box-shadow:  0 0 5px #ff0000;
+    border: 1px solid #ff0000;
+    -moz-box-shadow: 0 0 5px #ff0000;
+    -webkit-box-shadow: 0 0 5px #ff0000;
+    box-shadow: 0 0 5px #ff0000;
 }
 
-
-.icon-plus:before{
+.icon-plus:before {
     content: '+ New';
 }
 
-.icon-remove:before{
+.icon-remove:before {
     content: 'delete';
 }
 
-.icon-arrow-down:before{
+.icon-arrow-down:before {
     content: '\2193';
 }
 
-.icon-arrow-right:before{
+.icon-arrow-right:before {
     content: '\2192';
 }
 
-.turing-table{
+.turing-table {
     overflow-x: scroll;
-    width:100%;
-
+    width: 100%;
 }
 
-
-
-.turing-table table .noborder{
-    border:none;
+.turing-table table .noborder {
+    border: none;
     background: none;
 }
 
-.turing-table table{
+.turing-table table {
     border-collapse: collapse;
     text-align: left;
 }
 
-.turing-table table td{
-    width:240px;
+.turing-table table td {
+    width: 240px;
     min-width: 240px;
 }
 
-.turing-table table th.th-input{
-    width:130px;
+.turing-table table th.th-input {
+    width: 130px;
     min-width: 130px;
 }
 
 .turing-table table td,
-.turing-table table th{
-    border:1px solid #bbbbbb;
+.turing-table table th {
+    border: 1px solid #bbbbbb;
     border-collapse: collapse;
 
-    padding:4px;
+    padding: 4px;
 }
 
-.turing-table table th{
-    background-color:#f9f9f9;
+.turing-table table th {
+    background-color: #f9f9f9;
 }
-
-
 
 .turing-table {
     width: 100%;
@@ -111,14 +106,16 @@ input.ng-invalid,input.ng-invalid:focus{
     overflow-x: auto;
     -ms-overflow-style: -ms-autohiding-scrollbar;
 }
+
 .turing-table > .table {
     margin-bottom: 0;
 }
-.turing-table> .table > thead > tr > th,
-.turing-table> .table > tbody > tr > th,
-.turing-table> .table > tfoot > tr > th,
-.turing-table> .table > thead > tr > td,
-.turing-table> .table > tbody > tr > td,
-.turing-table> .table > tfoot > tr > td {
+
+.turing-table > .table > thead > tr > th,
+.turing-table > .table > tbody > tr > th,
+.turing-table > .table > tfoot > tr > th,
+.turing-table > .table > thead > tr > td,
+.turing-table > .table > tbody > tr > td,
+.turing-table > .table > tfoot > tr > td {
     white-space: nowrap;
 }
