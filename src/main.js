@@ -94,7 +94,7 @@ function main()
     console.info("Markets considered: ", markets);
 
     var programs = ['empty', '2bit-xor', 'zero-writer'];
-    var count_default_programs = 5;
+    var count_default_programs = 4;
     if (program_matches) {
         var p = program_matches[1].split(';');
         for (var i = 0; i < p.length; i++) {

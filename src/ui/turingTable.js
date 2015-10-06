@@ -8,13 +8,13 @@
 
                 $(document).on('syncMachine', function () {
                     //use timeout to safe propagation of values to angular
-                    $timeout(function () {
-                        $scope.load();
-                    })
+                    $scope.load();
                 });
 
+                //fire event when new programme is loaded.
                 window.app.manager().addEventListener('programActivated', function () {
                     $scope.undoHistory = [];
+                    $scope.load();
                 });
 
                 $scope.data = []
@@ -39,9 +39,12 @@
                 }
 
                 $scope.load = function () {
-                    $timeout(function () {
-                        init(window.app.tm().getProgram().toJSON());
-                    });
+                    var prog = window.app.tm().getProgram().toJSON();
+                    if (!angular.equals(prog, $scope.data)) {
+                        $timeout(function () {
+                            init(prog);
+                        });
+                    }
                 }
 
                 $scope.addInput = addInput;

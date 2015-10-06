@@ -5043,7 +5043,7 @@ function main()
     console.info("Markets considered: ", markets);
 
     var programs = ['empty', '2bit-xor', 'zero-writer'];
-    var count_default_programs = 5;
+    var count_default_programs = 4;
     if (program_matches) {
         var p = program_matches[1].split(';');
         for (var i = 0; i < p.length; i++) {
@@ -5187,13 +5187,13 @@ angular.module('turingmachine.js', []);
 
                 $(document).on('syncMachine', function () {
                     //use timeout to safe propagation of values to angular
-                    $timeout(function () {
-                        $scope.load();
-                    })
+                    $scope.load();
                 });
 
+                //fire event when new programme is loaded.
                 window.app.manager().addEventListener('programActivated', function () {
                     $scope.undoHistory = [];
+                    $scope.load();
                 });
 
                 $scope.data = []
@@ -5218,9 +5218,12 @@ angular.module('turingmachine.js', []);
                 }
 
                 $scope.load = function () {
-                    $timeout(function () {
-                        init(window.app.tm().getProgram().toJSON());
-                    });
+                    var prog = window.app.tm().getProgram().toJSON();
+                    if (!angular.equals(prog, $scope.data)) {
+                        $timeout(function () {
+                            init(prog);
+                        });
+                    }
                 }
 
                 $scope.addInput = addInput;
