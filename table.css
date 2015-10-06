@@ -52,7 +52,7 @@ input.ng-invalid, input.ng-invalid:focus {
 }
 
 .icon-remove:before {
-    content: 'delete';
+    content: 'x';
 }
 
 .icon-arrow-down:before {
