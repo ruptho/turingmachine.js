@@ -109,7 +109,7 @@
         <img src="static/gear.svg" alt="Gear animation" width="150" height="150"/>
     </div>
 
-    <p class="form">
+    <p class="form" style="float:right;padding:0 1em;">
 
         <label class="no_animation" for="input_wo_animation">
             disable animation
@@ -167,12 +167,13 @@
                    title="denote the cursor with surrounding *asterisks*"
                    style="text-align:center"/>
             <button type="button" class="tape_load">Load tape</button>
-
+            <p class="input-info">Load tape, comma separated values, mark cursor position with surrounding *asterisks*.</p>
         </div>
         <div class="input-group">
             <label for="input_final_states">Final states</label>
             <input type="text" size="40" value="" class="final_states" style="text-align:center"/>
             <button type="button" id="input_final_states" class="final_states_load">Set final states</button>
+            <p class="input-info">Set final states, comma separated, eg. <code>StateOne, StateTwo</code>.</p>
         </div>
     </div>
 </section>
@@ -187,7 +188,8 @@
             <select class="example" id="input_example_program">
                 <option data-none="true">no example programs available</option>
             </select>
-            <button type="button" class="example_load">Load to visualization</button>
+            <button type="button" class="example_load">Load Program</button>
+            <p class="input-info">Load example programs.</p>
         </div>
 
         <div class="input-group">
@@ -195,8 +197,9 @@
             <select class="testcase" id="testcase">
                 <option value="null">no testcase available</option>
             </select>
-            <button type="button" class="testcase_load">Load to visualization</button>
+            <button type="button" class="testcase_load">Load Test</button>
             <button type="button" type="submit" class="testcase_runall">Run All</button>
+            <p class="input-info">Run testcases of example programs.</p>
         </div>
     </div>
 
@@ -205,6 +208,7 @@
     <div class="form">
         <label for="input_machine_name">Machine name</label>
         <input type="text" class="machine_name" id="input_machine_name" size="20" maxlength="255"/>
+        <p class="input-info">The name of your machine (for import/export).</p>
     </div>
 </section>
 </body>

@@ -41,6 +41,7 @@ body > section {
 h1, h2, h3, h4, h5, h6, p {
     color: #333;
     font-family: sans-serif;
+    margin:1.4em 0 0.33em 0;
 }
 
 table {
@@ -91,7 +92,7 @@ button, select {
     text-align: left;
     margin-left:auto;
     margin-right:auto;
-    max-width:720px;
+    max-width:800px;
 }
 
 button, input[type=text], select {
@@ -152,9 +153,29 @@ select:focus, input[type=text]:focus {
 label {
     font-weight: 600;
     margin-right: 3px;
-    width:180px;
+    width:160px;
     text-align: right;
     display:inline-block;
+}
+
+.input-info{
+    color:rgb(50,50,50);
+    display:block;
+    margin: 0.25em 0 1.5em 175px;
+    font-size:95%;
+}
+
+code{
+    background-color:#eeeeee;
+    color:#555555;
+    border: 1px solid #cccccc;
+    border-radius: 3px;
+    padding:2px 8px 0 8px;
+    line-height: 1.5em;
+    display:inline-block;
+    font-family: 'consolas',monospace;
+    font-size:90%;
+    margin:0 4px;
 }
 
 /*button {

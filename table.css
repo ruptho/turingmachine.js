@@ -48,11 +48,11 @@ input.ng-invalid, input.ng-invalid:focus {
 }
 
 .icon-plus:before {
-    content: '+ New';
+    content: '\2795 New';
 }
 
 .icon-remove:before {
-    content: 'x';
+    content: '\2718';
 }
 
 .icon-arrow-down:before {
