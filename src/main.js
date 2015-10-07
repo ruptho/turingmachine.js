@@ -124,9 +124,9 @@ function main()
     if (window.localStorage['activeprogram']) {
         // load the program used in the last session
         manager.activateWhenReady(window.localStorage['activeprogram']);
-    } else if (programs[count_default_programs]) {
+    } else if (programs[0]) {
         // if user-defined program are provided, load first one per default
-        manager.activateWhenReady(programs[count_default_programs]);
+        manager.activateWhenReady(programs[0]);
     }
 
     application.run();
