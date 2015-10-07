@@ -26,25 +26,18 @@
                     $scope.load();
                 });
 
+                //clear history when program is loaded
                 window.app.manager().addEventListener('programActivated', function () {
                     $scope.undoHistory = [];
                 });
 
-                //timeouts;
-                var undoTimeout = null;
-                var machineupdateTimeout = null;
 
                 ///UNDO: undo related things are at the end.
 
                 function update() {
-                    //accept undo change just when no change within 50ms occured.
-                    $timeout.cancel(undoTimeout);
-                    undoTimeout = $timeout(function () {
-                        undoStep();
-                    }, 50);
+                    undoStep();
 
-                    $timeout.cancel(machineupdateTimeout);
-                    machineupdateTimeout = $timeout(function () {
+                    $timeout(function () {
                         window.app.tm().getProgram().clear();
                         window.app.tm().getProgram().fromJSON($scope.data);
                         console.log("updated machine from table", $scope.data);
@@ -99,7 +92,8 @@
                     $scope.inputs.push('');
                     var div = $("#edittable");
                     div.parent().animate({
-                            scrollLeft: div.width()},
+                            scrollLeft: div.width()
+                        },
                         'slow');
                 }
 
@@ -199,19 +193,44 @@
                 $scope.undoHistory = [];
                 $scope.undo = undo;
 
+                //timeouts;
+                var undoTimeout = null;
+
+
+                $scope.$watch(function () {
+                    return $scope.states.length + ":" + $scope.inputs.length;
+                }, function () {
+                    undoStep();
+                })
+
                 $scope.canUndo = function () {
-                    return !($scope.undoHistory.length > 1);
+                    return !($scope.undoHistory.length > 2);
                 }
 
                 function undo() {
+                    //remove current
                     $scope.undoHistory.pop();
-                    init($scope.undoHistory.pop());
+                    var d = $scope.undoHistory.pop();
+                    $scope.states = [];
+                    $scope.inputs = [];
+                    $timeout(function(){
+                        $scope.states = d.states;
+                        $scope.inputs = d.inputs;
+                        $scope.data = d.data;
+                    });
                 }
 
                 function undoStep() {
-                    console.log("undo", $scope.undoCurrent, $scope.undoHistory)
-                    $scope.undoHistory.push(deepCopy($scope.data));
-                    //$scope.undoCurrent++;
+                    //accept undo change just when no change within 50ms occured.
+                    $timeout.cancel(undoTimeout);
+                    undoTimeout = $timeout(function () {
+                        console.log("undo", $scope.undoHistory)
+                        $scope.undoHistory.push({
+                            states: deepCopy($scope.states),
+                            inputs: deepCopy($scope.inputs),
+                            data: deepCopy($scope.data)
+                        });
+                    }, 50);
                 }
             }
         };
