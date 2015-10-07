@@ -1,60 +1,65 @@
 (function (window, angular, app, undefined) {
     app.directive('turingTable', ['$timeout', function ($timeout) {
         return {
-            restrict: 'C',
-            scope: true,
-            templateUrl: 'table.html',
+            restrict: 'C', //restrict to css class
+            scope: true, //directive has own scope
+            templateUrl: 'table.html', //external template for maintainability
             link: function ($scope, element, attr) {
-
-                $(document).on('syncMachine', function () {
-                    //use timeout to safe propagation of values to angular
-                    $scope.load();
-                });
-
-                //fire event when new programme is loaded.
-                window.app.manager().addEventListener('programActivated', function () {
-                    $scope.undoHistory = [];
-                    $scope.load();
-                });
-
+                //variables:
                 $scope.data = []
                 $scope.inputs = [];
                 $scope.states = [];
 
-
-                var undoTimeout = null;
-
-                $scope.update = function () {
-
-                    $timeout.cancel(undoTimeout);
-
-                    undoTimeout = $timeout(function () {
-                        undoStep();
-                    }, 50);
-
-
-                    window.app.tm().getProgram().clear();
-                    window.app.tm().getProgram().fromJSON($scope.data);
-                    console.log("updated machine from table", $scope.data);
-                }
-
-                $scope.load = function () {
-                    var prog = window.app.tm().getProgram().toJSON();
-                    if (!angular.equals(prog, $scope.data)) {
-                        $timeout(function () {
-                            init(prog);
-                        });
-                    }
-                }
-
+                //methods:
                 $scope.addInput = addInput;
                 $scope.addState = addState;
                 $scope.deleteInput = deleteInput;
                 $scope.deleteState = deleteState;
                 $scope.getElementAt = getElementAt;
                 $scope.updateElementAt = updateElementAt;
-
                 $scope.change = change;
+                $scope.update = update;
+                $scope.load = load;
+
+                //events;
+                $(document).on('syncMachine', function () {
+                    $scope.load();
+                });
+
+                window.app.manager().addEventListener('programActivated', function () {
+                    $scope.undoHistory = [];
+                });
+
+                //timeouts;
+                var undoTimeout = null;
+                var machineupdateTimeout = null;
+
+                ///UNDO: undo related things are at the end.
+
+                function update() {
+                    //accept undo change just when no change within 50ms occured.
+                    $timeout.cancel(undoTimeout);
+                    undoTimeout = $timeout(function () {
+                        undoStep();
+                    }, 50);
+
+                    $timeout.cancel(machineupdateTimeout);
+                    machineupdateTimeout = $timeout(function () {
+                        window.app.tm().getProgram().clear();
+                        window.app.tm().getProgram().fromJSON($scope.data);
+                        console.log("updated machine from table", $scope.data);
+                    }, 20);
+                }
+
+                function load() {
+                    var prog = window.app.tm().getProgram().toJSON();
+                    if (!angular.equals(prog, $scope.data)) {
+                        //use timeout to safe propagation of values to angular (timeout fires digest cycle)
+                        $timeout(function () {
+                            init(prog);
+                        });
+                    }
+                }
 
                 function init(data) {
                     $scope.inputs = [];
@@ -99,7 +104,6 @@
                 }
 
                 function deleteState(index) {
-
                     var state = $scope.states[index];
 
                     for (var i = 0; i < $scope.data.length; i++) {
@@ -114,9 +118,7 @@
                 }
 
                 function deleteInput(index) {
-
                     var input = $scope.inputs[index];
-
                     for (var i = 0; i < $scope.data.length; i++) {
                         var prog = $scope.data[i];
                         if (prog[0] === input) {
@@ -129,9 +131,7 @@
                 }
 
                 function deleteElement(state, input) {
-
                     var input = $scope.inputs[index];
-
                     for (var i = 0; i < $scope.data.length; i++) {
                         var prog = $scope.data[i];
                         if (prog[0] === input && prog[1] === state) {
@@ -192,14 +192,12 @@
                 }
 
                 //undo mechanism
-
                 $scope.undoHistory = [];
                 $scope.undo = undo;
 
                 $scope.canUndo = function () {
                     return !($scope.undoHistory.length > 1);
                 }
-
 
                 function undo() {
                     $scope.undoHistory.pop();
@@ -211,7 +209,6 @@
                     $scope.undoHistory.push(deepCopy($scope.data));
                     //$scope.undoCurrent++;
                 }
-
             }
         };
     }]);
