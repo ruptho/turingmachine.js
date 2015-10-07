@@ -350,6 +350,7 @@ section.turingmachine {
 
 .turingmachine_data {
     width: 100%;
+    padding:3em 0.5em;
 }
 
 .turingmachine .interrupt {
