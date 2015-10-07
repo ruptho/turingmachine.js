@@ -5101,7 +5101,11 @@ angular.module('turingmachine.js', []);
             '</select>' +
             '<input class="inline state-nextstate" type="text" ng-model="data[2]" ng-model-options="{ debounce: 500 }"/>',
             link: function (scope, element, attr) {
-                scope.data = scope.stateEditor || [];
+
+                scope.$watch('stateEditor',function(){
+                    scope.data = scope.stateEditor || [];
+                });
+
                 scope.$watchCollection('data', function (data) {
                     if (data.length === 3 && !!data[0] && !!data[1] && !!data[2]) {
                         scope.callback(scope.row, scope.column, data);
@@ -5168,11 +5172,9 @@ angular.module('turingmachine.js', []);
                 }
 
                 function init(data) {
-                    $scope.inputs = [];
-                    $scope.states = [];
-
                     $timeout(function () {
-
+                        $scope.inputs = [];
+                        $scope.states = [];
                         $scope.data = data;
                         console.log("updated table");
 
@@ -5311,7 +5313,7 @@ angular.module('turingmachine.js', []);
 
 
                 $scope.$watch(function () {
-                    return $scope.states.length + ":" + $scope.inputs.length;
+                    return JSON.stringify($scope.states) + JSON.stringify($scope.inputs)
                 }, function () {
                     undoStep();
                 })
@@ -5324,13 +5326,9 @@ angular.module('turingmachine.js', []);
                     //remove current
                     $scope.undoHistory.pop();
                     var d = $scope.undoHistory.pop();
-                    $scope.states = [];
-                    $scope.inputs = [];
-                    $timeout(function(){
-                        $scope.states = d.states;
-                        $scope.inputs = d.inputs;
-                        $scope.data = d.data;
-                    });
+                    $scope.states = d.states;
+                    $scope.inputs = d.inputs;
+                    $scope.data = d.data;
                 }
 
                 function undoStep() {

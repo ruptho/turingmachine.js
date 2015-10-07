@@ -17,7 +17,11 @@
             '</select>' +
             '<input class="inline state-nextstate" type="text" ng-model="data[2]" ng-model-options="{ debounce: 500 }"/>',
             link: function (scope, element, attr) {
-                scope.data = scope.stateEditor || [];
+
+                scope.$watch('stateEditor',function(){
+                    scope.data = scope.stateEditor || [];
+                });
+
                 scope.$watchCollection('data', function (data) {
                     if (data.length === 3 && !!data[0] && !!data[1] && !!data[2]) {
                         scope.callback(scope.row, scope.column, data);

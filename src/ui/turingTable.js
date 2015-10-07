@@ -55,11 +55,9 @@
                 }
 
                 function init(data) {
-                    $scope.inputs = [];
-                    $scope.states = [];
-
                     $timeout(function () {
-
+                        $scope.inputs = [];
+                        $scope.states = [];
                         $scope.data = data;
                         console.log("updated table");
 
@@ -198,7 +196,7 @@
 
 
                 $scope.$watch(function () {
-                    return $scope.states.length + ":" + $scope.inputs.length;
+                    return JSON.stringify($scope.states) + JSON.stringify($scope.inputs)
                 }, function () {
                     undoStep();
                 })
@@ -211,13 +209,9 @@
                     //remove current
                     $scope.undoHistory.pop();
                     var d = $scope.undoHistory.pop();
-                    $scope.states = [];
-                    $scope.inputs = [];
-                    $timeout(function(){
-                        $scope.states = d.states;
-                        $scope.inputs = d.inputs;
-                        $scope.data = d.data;
-                    });
+                    $scope.states = d.states;
+                    $scope.inputs = d.inputs;
+                    $scope.data = d.data;
                 }
 
                 function undoStep() {
