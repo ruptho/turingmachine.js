@@ -573,6 +573,7 @@ var AnimatedTuringMachine = function (program, tape, final_states,
                 // TODO: normalization functions as parameter: symbol_norm_fn, state_norm_fn
                     data = foswiki.read(self, text);
                 self.alertNote("Input data parsed. Continue with import.");
+                $("#overlay").click();
             } catch (e) {
                 self.alertNote("Failed to parse given input: " + e.message
                     + ". Import aborted.");
