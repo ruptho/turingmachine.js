@@ -76,8 +76,19 @@ input.ng-invalid, input.ng-invalid:focus {
 .turing-table table th {
     border: 1px solid #bbbbbb;
     border-collapse: collapse;
+    padding:2px 4px;
+}
 
-    padding: 4px;
+.turing-table table td .cell-error{
+    -moz-box-shadow: 0 0 5px #ff0000;
+    -webkit-box-shadow: 0 0 5px #ff0000;
+    box-shadow: 0 0 5px #ff0000;
+    border:1px solid red;
+}
+
+.turing-table table td>div{
+    margin:-4px;
+    border:1px solid transparent;
 }
 
 .turing-table table th {

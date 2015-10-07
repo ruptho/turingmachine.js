@@ -19,7 +19,8 @@
         <th ng-repeat="c in inputs track by $index" class="th-input">
             <input class="inline full" type="text" ng-model="c"
                    ng-maxlength="1"
-                   size="" unique-input="inputs" program="data" index="$index" ng-change="update()" ng-model-options="{ debounce: 500 }"/>
+                   size="" unique-input="inputs" program="data" index="$index" ng-change="update()"
+                   ng-model-options="{ debounce: 500 }"/>
         </th>
         <th>
             <button ng-click="addInput()"><span class="fa fa-plus"></span> New</button>
@@ -35,7 +36,8 @@
         </th>
         <th scope="row" ng-init="rowIndex=$index" class="th-input">
             <input class="inline full" type="text" ng-model="row"
-                   size="" unique-state="states" program="data" index="rowIndex" ng-change="update()" ng-model-options="{ debounce: 500 }" />
+                   size="" unique-state="states" program="data" index="rowIndex" ng-change="update()"
+                   ng-model-options="{ debounce: 500 }"/>
         </th>
         <td ng-repeat="col in inputs track by $index" row="row" column="col"
             ng-init="data=getElementAt(row,col)" state-editor="getElementAt(row,col)" callback="updateElementAt"></td>

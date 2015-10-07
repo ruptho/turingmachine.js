@@ -5092,24 +5092,29 @@ angular.module('turingmachine.js', []);
                 column: '=',
                 row: '='
             },
-            template: '<input class="inline state-input" ng-maxlength="1" type="text" ng-model="data[0]" ng-model-options="{ debounce: 500 }"/>' +
+            template: '<div ng-class="{\'cell-error\':cellError}"><input class="inline state-input" ng-maxlength="1" type="text" ng-model="data[0]" ng-model-options="{ debounce: 500 }"/>' +
             '<select ng-model="data[1]" class="state-movement">' +
             '<option></option>' +
             '<option>Stop</option>' +
             '<option>Left</option>' +
             '<option>Right</option>' +
             '</select>' +
-            '<input class="inline state-nextstate" type="text" ng-model="data[2]" ng-model-options="{ debounce: 500 }"/>',
+            '<input class="inline state-nextstate" type="text" ng-model="data[2]" ng-model-options="{ debounce: 500 }"/></div>',
             link: function (scope, element, attr) {
+                scope.cellError = false;
 
-                scope.$watch('stateEditor',function(){
+                scope.$watch('stateEditor', function () {
                     scope.data = scope.stateEditor || [];
                 });
 
                 scope.$watchCollection('data', function (data) {
                     if (data.length === 3 && !!data[0] && !!data[1] && !!data[2]) {
                         scope.callback(scope.row, scope.column, data);
+                    } else if (!data[0] && !data[1] && !data[2]) {
+                        scope.callback(scope.row, scope.column, null);
                     }
+
+                    scope.cellError=!((!data[0] && !data[1] && !data[2]) || (!!data[0] && !!data[1] && !!data[2]));
                 })
             }
         }
@@ -5151,14 +5156,16 @@ angular.module('turingmachine.js', []);
 
                 ///UNDO: undo related things are at the end.
 
+                var machineUpdate=null;
                 function update() {
                     undoStep();
 
-                    $timeout(function () {
+                    $timeout.cancel(machineUpdate);
+                    machineUpdate=$timeout(function () {
                         window.app.tm().getProgram().clear();
                         window.app.tm().getProgram().fromJSON($scope.data);
                         console.log("updated machine from table", $scope.data);
-                    }, 0);
+                    }, 10);
                 }
 
                 function load() {
@@ -5223,7 +5230,9 @@ angular.module('turingmachine.js', []);
                             i--;
                         }
                     }
-                    removeFromArray($scope.states, state);
+
+                    $scope.states.splice(index, 1);
+                    //removeFromArray($scope.states, state);
                     $scope.update()
                 }
 
@@ -5232,25 +5241,22 @@ angular.module('turingmachine.js', []);
                     for (var i = 0; i < $scope.data.length; i++) {
                         var prog = $scope.data[i];
                         if (prog[0] === input) {
-                            $scope.data.splice(i, 1);
-                            i--;
+                            deleteElement(prog[1], prog[0])
                         }
                     }
-                    removeFromArray($scope.inputs, input);
+                    //removeFromArray($scope.inputs, input);
+                    $scope.inputs.splice(index, 1);
                     $scope.update()
                 }
 
                 function deleteElement(state, input) {
-                    var input = $scope.inputs[index];
                     for (var i = 0; i < $scope.data.length; i++) {
                         var prog = $scope.data[i];
                         if (prog[0] === input && prog[1] === state) {
                             $scope.data.splice(i, 1);
-                            i--;
+                            return;
                         }
                     }
-                    removeFromArray($scope.inputs, input);
-                    // no update since already called from update method
                 }
 
                 function getElementAt(state, input) {
@@ -5275,10 +5281,11 @@ angular.module('turingmachine.js', []);
 
                 function updateElementAt(state, input, data) {
                     var element = getElementAt(state, input);
-                    if (element == null) {
+                    if (element == null && data != null) {
                         $scope.data.push([input, state, data]);
                     } else {
-                        if (data[0] === '' && data[1] === '' && data[2] === '') {
+                        console.log("updata", data);
+                        if (data == null || (!data[0] && !data[1] && !data[2])) {
                             deleteElement(state, input);
                         } else {
                             setElementAt(state, input, data);

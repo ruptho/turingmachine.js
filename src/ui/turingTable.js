@@ -34,14 +34,16 @@
 
                 ///UNDO: undo related things are at the end.
 
+                var machineUpdate=null;
                 function update() {
                     undoStep();
 
-                    $timeout(function () {
+                    $timeout.cancel(machineUpdate);
+                    machineUpdate=$timeout(function () {
                         window.app.tm().getProgram().clear();
                         window.app.tm().getProgram().fromJSON($scope.data);
                         console.log("updated machine from table", $scope.data);
-                    }, 0);
+                    }, 10);
                 }
 
                 function load() {
@@ -106,7 +108,9 @@
                             i--;
                         }
                     }
-                    removeFromArray($scope.states, state);
+
+                    $scope.states.splice(index, 1);
+                    //removeFromArray($scope.states, state);
                     $scope.update()
                 }
 
@@ -115,25 +119,22 @@
                     for (var i = 0; i < $scope.data.length; i++) {
                         var prog = $scope.data[i];
                         if (prog[0] === input) {
-                            $scope.data.splice(i, 1);
-                            i--;
+                            deleteElement(prog[1], prog[0])
                         }
                     }
-                    removeFromArray($scope.inputs, input);
+                    //removeFromArray($scope.inputs, input);
+                    $scope.inputs.splice(index, 1);
                     $scope.update()
                 }
 
                 function deleteElement(state, input) {
-                    var input = $scope.inputs[index];
                     for (var i = 0; i < $scope.data.length; i++) {
                         var prog = $scope.data[i];
                         if (prog[0] === input && prog[1] === state) {
                             $scope.data.splice(i, 1);
-                            i--;
+                            return;
                         }
                     }
-                    removeFromArray($scope.inputs, input);
-                    // no update since already called from update method
                 }
 
                 function getElementAt(state, input) {
@@ -158,10 +159,11 @@
 
                 function updateElementAt(state, input, data) {
                     var element = getElementAt(state, input);
-                    if (element == null) {
+                    if (element == null && data != null) {
                         $scope.data.push([input, state, data]);
                     } else {
-                        if (data[0] === '' && data[1] === '' && data[2] === '') {
+                        console.log("updata", data);
+                        if (data == null || (!data[0] && !data[1] && !data[2])) {
                             deleteElement(state, input);
                         } else {
                             setElementAt(state, input, data);
