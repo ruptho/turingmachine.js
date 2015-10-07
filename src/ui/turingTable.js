@@ -97,6 +97,10 @@
 
                 function addInput() {
                     $scope.inputs.push('');
+                    var div = $("#edittable");
+                    div.parent().animate({
+                            scrollLeft: div.width()},
+                        'slow');
                 }
 
                 function addState() {

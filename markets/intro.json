@@ -1,0 +1,57 @@
+{
+  "title" : "01 - Introduction",
+  "description" : [
+    "Small introduction program."
+
+  ],
+  "version" : "1.2 / 23rd of Aug 2015 / meisterluk",
+  "tape": {
+    "data": ["^", "0", "1", "0", "0", "1", "$"],
+    "cursor": 1,
+    "blank": "0"
+  },
+  "program": [
+    ["0", "Start", "0", "RIGHT", "Start"],
+    ["1", "Start", "1", "RIGHT", "Found1one"],
+    ["$", "Start", "$", "STOP", "Count0ones"],
+    ["0", "Found1one", "0", "RIGHT", "Found1one"],
+    ["1", "Found1one", "1", "RIGHT", "Found2ones"],
+    ["$", "Found1one", "$", "STOP", "Count1one"],
+    ["0", "Found2ones", "0", "RIGHT", "Found2ones"],
+    ["1", "Found2ones", "1", "STOP", "Count2ones"],
+    ["$", "Found2ones", "$", "STOP", "Count2ones"]
+  ],
+  "state" : "Start",
+  "final_states" : ["Count0ones", "Count1one", "Count2ones"],
+  "testcases" : [
+    {
+      "name": "find 0 ones in ^00000$",
+      "input": {
+        "tape": { "cursor": 1, "blank": "0", "data": ["^", "0", "0", "0", "0", "0", "$"] },
+        "state": "Start"
+      },
+      "output": { "state": "Count0ones" }
+    }, {
+      "name": "find 1 one in ^00010$",
+      "input": {
+        "tape": { "cursor": 1, "blank": "0", "data": ["^", "0", "0", "0", "1", "0", "$"] },
+        "state": "Start"
+      },
+      "output": { "state": "Count1one" }
+    }, {
+      "name": "find 2 ones in ^10010$",
+      "input": {
+        "tape": { "cursor": 1, "blank": "0", "data": ["^", "1", "0", "0", "1", "0", "$"] },
+        "state": "Start"
+      },
+      "output": { "state": "Count2ones" }
+    }, {
+      "name": "find 1 one in ^00010000000$",
+      "input": {
+        "tape": { "cursor": 1, "blank": "0", "data": ["^", "0", "0", "0", "1", "0", "0", "0", "0", "0", "0", "0", "$"] },
+        "state": "Start"
+      },
+      "output": { "state": "Count1one" }
+    }
+  ]
+}

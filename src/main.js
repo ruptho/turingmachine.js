@@ -1,66 +1,5 @@
 // ----------------------------- Main routine -----------------------------
 
-var intro_program = {
-    "title" : "01 - Introduction",
-    "description" : [
-        "Hi! This project is all about *turingmachines*. What are turingmachines? They are a computational concept from *Theoretical Computer Science* (TCS) by Alan Turing (*\u20061912 †\u20061954). They illustrate one possible way to define computation and are as powerful as your computer. So how do they work?",
-        "Above you can see the animated turing machine with several control elements underneath. The animation consists of a tape (with bright background color) and one cursor (winded green structure). The text at the left bottom of the animation is called *current state*. You can press \"continue\" to compute the next *step*. What are steps?",
-        "At the bottom you can see a *transition table*. It defines a current situation, consisting of a read symbol and a state, and the next situation after one step has been performed. So when you press \"continue\" the program will read the symbol focused by the cursor and the current state. It will search for a line in the transition table matching those 2 values and will execute the corresponding result. The result consists of a symbol to write, a movement of the tape and a successor state.",
-        "The current program handles the following problem: Between '^' and '$' are there 0, 1 or 2 ones? Depending on the number, the final state is either Count0ones, Count1one or Count2ones.",
-        "You can edit the transition table yourself. Try it! 😊"
-    ],
-    "version" : "1.2 / 23rd of Aug 2015 / meisterluk",
-    "tape": {
-        "data": ["^", "0", "1", "0", "0", "1", "$"],
-        "cursor": 1,
-        "blank": "0"
-    },
-    "program": [
-        ["0", "Start", "0", "RIGHT", "Start"],
-        ["1", "Start", "1", "RIGHT", "Found1one"],
-        ["$", "Start", "$", "STOP", "Count0ones"],
-        ["0", "Found1one", "0", "RIGHT", "Found1one"],
-        ["1", "Found1one", "1", "RIGHT", "Found2ones"],
-        ["$", "Found1one", "$", "STOP", "Count1one"],
-        ["0", "Found2ones", "0", "RIGHT", "Found2ones"],
-        ["1", "Found2ones", "1", "STOP", "Count2ones"],
-        ["$", "Found2ones", "$", "STOP", "Count2ones"],
-    ],
-    "state" : "Start",
-    "final_states" : ["Count0ones", "Count1one", "Count2ones"],
-    "testcases" : [
-        {
-            "name": "find 0 ones in ^00000$",
-            "input": {
-                "tape": { "cursor": 1, "blank": "0", "data": ["^", "0", "0", "0", "0", "0", "$"] },
-                "state": "Start"
-            },
-            "output": { "state": "Count0ones" }
-        }, {
-            "name": "find 1 one in ^00010$",
-            "input": {
-                "tape": { "cursor": 1, "blank": "0", "data": ["^", "0", "0", "0", "1", "0", "$"] },
-                "state": "Start"
-            },
-            "output": { "state": "Count1one" }
-        }, {
-            "name": "find 2 ones in ^10010$",
-            "input": {
-                "tape": { "cursor": 1, "blank": "0", "data": ["^", "1", "0", "0", "1", "0", "$"] },
-                "state": "Start"
-            },
-            "output": { "state": "Count2ones" }
-        }, {
-            "name": "find 1 one in ^00010000000$",
-            "input": {
-                "tape": { "cursor": 1, "blank": "0", "data": ["^", "0", "0", "0", "1", "0", "0", "0", "0", "0", "0", "0", "$"] },
-                "state": "Start"
-            },
-            "output": { "state": "Count1one" }
-        }
-    ]
-};
-
 function main()
 {
     // initialize application
@@ -93,7 +32,7 @@ function main()
     }
     console.info("Markets considered: ", markets);
 
-    var programs = ['empty', '2bit-xor', 'zero-writer'];
+    var programs = ['empty','intro', '2bit-xor', 'zero-writer'];
     var count_default_programs = 4;
     if (program_matches) {
         var p = program_matches[1].split(';');
@@ -178,11 +117,6 @@ function main()
             self.alertNote(e.message);
         }
     });
-
-    // Immediately load the default program and later update,
-    // if another program shall be activated
-    manager.add("intro", intro_program);
-    manager.activateProgram("intro");
 
     for (var i = 0; i < programs.length; i++)
         manager.load(programs[i]);
