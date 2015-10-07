@@ -1,7 +1,7 @@
 {
   "name": "turingmachine.js",
-  "version": "1.0.2",
-  "description": "turingmachine.js ================",
+  "version": "1.0.2-gdimod",
+  "description": "turingmachine.js",
   "main": "Gruntfile.js",
   "directories": {
     "test": "tests"
@@ -13,7 +13,7 @@
     "type": "git",
     "url": "git://github.com/ruptho/turingmachine.js.git"
   },
-  "author": "",
+  "author": "Lukas Prokop",
   "license": "CC0",
   "bugs": {
     "url": "https://github.com/ruptho/turingmachine.js/issues"

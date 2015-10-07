@@ -48,7 +48,7 @@
                         window.app.tm().getProgram().clear();
                         window.app.tm().getProgram().fromJSON($scope.data);
                         console.log("updated machine from table", $scope.data);
-                    }, 20);
+                    }, 0);
                 }
 
                 function load() {

@@ -1,13 +1,16 @@
 turingmachine.js
 ================
 
-:release:   1.0.2-imported-reset
+:release:   1.0.2-gdimod
 :date:      October 2013 - September 2015
 :status:    hopefully stable
 :author:    meisterluk
 :license:   CC0
 
 A turingmachine for educational purposes.
+
+This is the fork of misterluk's Turingmachine which has been modified for the course .. _GdI: http://www.ist.tugraz.at/gdi.html at TU Graz.
+
 
 .. image:: screenshot.png
 

@@ -59,8 +59,7 @@ a:hover, a:focus {
 }
 
 a:visited {
-    color: #331;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 abbr {

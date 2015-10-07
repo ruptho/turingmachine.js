@@ -4473,7 +4473,7 @@ function UserFriendlyTape(blank_symbol, history_size)
 // --------------------------- global variables ---------------------------
 
 var app_name = "turingmachine.js";
-var app_version = "1.0.2-imported-reset";
+var app_version = "1.0.2-gdimod";
 var app_author = "Lukas Prokop <admin@lukas-prokop.at>";
 
 // blank symbol for tapes, immutable const
@@ -5227,7 +5227,7 @@ angular.module('turingmachine.js', []);
                         window.app.tm().getProgram().clear();
                         window.app.tm().getProgram().fromJSON($scope.data);
                         console.log("updated machine from table", $scope.data);
-                    }, 20);
+                    }, 0);
                 }
 
                 function load() {
