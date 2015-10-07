@@ -5147,7 +5147,7 @@ angular.module('turingmachine.js', []);
 
                 //events;
                 $(document).on('syncMachine', function () {
-                    //$scope.load();
+                    $scope.load();
                 });
 
                 //clear history when program is loaded
