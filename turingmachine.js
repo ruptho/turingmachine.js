@@ -5093,7 +5093,7 @@ angular.module('turingmachine.js', []);
                 row: '='
             },
             template: '<input class="inline state-input" ng-maxlength="1" type="text" ng-model="data[0]" ng-model-options="{ debounce: 500 }"/>' +
-            '<select ng-model="data[1]" class="state-movement" ng-model-options="{ debounce: 500 }">' +
+            '<select ng-model="data[1]" class="state-movement">' +
             '<option></option>' +
             '<option>Stop</option>' +
             '<option>Left</option>' +
@@ -5172,19 +5172,16 @@ angular.module('turingmachine.js', []);
                 }
 
                 function init(data) {
-                    $timeout(function () {
-                        $scope.inputs = [];
-                        $scope.states = [];
-                        $scope.data = data;
-                        console.log("updated table");
+                    $scope.inputs = [];
+                    $scope.states = [];
+                    $scope.data = data;
+                    console.log("updated table");
 
-                        for (var i in $scope.data) {
-                            var programEntry = $scope.data[i];
-                            addToSet($scope.inputs, programEntry[0]);
-                            addToSet($scope.states, programEntry[1]);
-                        }
-
-                    });
+                    for (var i in $scope.data) {
+                        var programEntry = $scope.data[i];
+                        addToSet($scope.inputs, programEntry[0]);
+                        addToSet($scope.states, programEntry[1]);
+                    }
                 }
 
                 function addToSet(array, element) {
@@ -5337,6 +5334,7 @@ angular.module('turingmachine.js', []);
                     undoTimeout = $timeout(function () {
                         console.log("undo", $scope.undoHistory)
                         $scope.undoHistory.push({
+                            //use deep copys to prevent changing of history
                             states: deepCopy($scope.states),
                             inputs: deepCopy($scope.inputs),
                             data: deepCopy($scope.data)

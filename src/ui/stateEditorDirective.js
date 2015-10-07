@@ -9,7 +9,7 @@
                 row: '='
             },
             template: '<input class="inline state-input" ng-maxlength="1" type="text" ng-model="data[0]" ng-model-options="{ debounce: 500 }"/>' +
-            '<select ng-model="data[1]" class="state-movement" ng-model-options="{ debounce: 500 }">' +
+            '<select ng-model="data[1]" class="state-movement">' +
             '<option></option>' +
             '<option>Stop</option>' +
             '<option>Left</option>' +

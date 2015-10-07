@@ -55,19 +55,16 @@
                 }
 
                 function init(data) {
-                    $timeout(function () {
-                        $scope.inputs = [];
-                        $scope.states = [];
-                        $scope.data = data;
-                        console.log("updated table");
+                    $scope.inputs = [];
+                    $scope.states = [];
+                    $scope.data = data;
+                    console.log("updated table");
 
-                        for (var i in $scope.data) {
-                            var programEntry = $scope.data[i];
-                            addToSet($scope.inputs, programEntry[0]);
-                            addToSet($scope.states, programEntry[1]);
-                        }
-
-                    });
+                    for (var i in $scope.data) {
+                        var programEntry = $scope.data[i];
+                        addToSet($scope.inputs, programEntry[0]);
+                        addToSet($scope.states, programEntry[1]);
+                    }
                 }
 
                 function addToSet(array, element) {
@@ -220,6 +217,7 @@
                     undoTimeout = $timeout(function () {
                         console.log("undo", $scope.undoHistory)
                         $scope.undoHistory.push({
+                            //use deep copys to prevent changing of history
                             states: deepCopy($scope.states),
                             inputs: deepCopy($scope.inputs),
                             data: deepCopy($scope.data)
