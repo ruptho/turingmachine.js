@@ -9,8 +9,7 @@ turingmachine.js
 
 A turingmachine for educational purposes.
 
-This is the fork of misterluk's Turingmachine which has been modified for the course .. _GdI: http://www.ist.tugraz.at/gdi.html at TU Graz.
-
+This is a fork of misterluk's Turingmachine which has been modified for the course GdI (http://www.ist.tugraz.at/gdi.html) at TU Graz.
 
 .. image:: screenshot.png
 
