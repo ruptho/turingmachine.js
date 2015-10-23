@@ -8,7 +8,7 @@
                 column: '=',
                 row: '='
             },
-            template: '<div ng-class="{\'cell-error\':cellError}"><input class="inline state-input" ng-maxlength="1" type="text" ng-model="data[0]" ng-model-options="{ debounce: 500 }"/>' +
+            template: '<div ng-class="{\'cell-error\':cellError}"><input class="inline state-input" ng-maxlength="1" type="text" ng-model="data[0]" ng-model-options="{ debounce: 500 }" ng-pattern="/[\\w#$*\\.^]/" />' +
             '<select ng-model="data[1]" class="state-movement">' +
             '<option></option>' +
             '<option>Stop</option>' +

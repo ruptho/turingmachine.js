@@ -20,7 +20,8 @@
             <input class="inline full" type="text" ng-model="c"
                    ng-maxlength="1"
                    size="" unique-input="inputs" program="data" index="$index" ng-change="update()"
-                   ng-model-options="{ debounce: 500 }"/>
+                   ng-model-options="{ debounce: 500 }"
+                    ng-pattern="/[\w#$*\.^]/"/>
         </th>
         <th>
             <button ng-click="addInput()"><span class="fa fa-plus"></span> New</button>
