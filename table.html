@@ -37,7 +37,8 @@
         <th scope="row" ng-init="rowIndex=$index" class="th-input">
             <input class="inline full" type="text" ng-model="row"
                    size="" unique-state="states" program="data" index="rowIndex" ng-change="update()"
-                   ng-model-options="{ debounce: 500 }"/>
+                   ng-model-options="{ debounce: 500 }"
+                   ng-pattern="/^[\S]*$/"/>
         </th>
         <td ng-repeat="col in inputs track by $index" row="row" column="col"
             ng-init="data=getElementAt(row,col)" state-editor="getElementAt(row,col)" callback="updateElementAt"></td>

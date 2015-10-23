@@ -15,7 +15,7 @@
             '<option>Left</option>' +
             '<option>Right</option>' +
             '</select>' +
-            '<input class="inline state-nextstate" type="text" ng-model="data[2]" ng-model-options="{ debounce: 500 }"/></div>',
+            '<input class="inline state-nextstate" type="text" ng-model="data[2]" ng-model-options="{ debounce: 500 }" ng-pattern="/^[\\S]*$/"/></div>',
             link: function (scope, element, attr) {
                 scope.cellError = false;
 
