@@ -1362,17 +1362,19 @@ foswiki.readTable = function (tokenstream) {
   return table;
 };
 
+var tripleRegex=/\s*(\S)\s*-\s*(\S+)\s*-\s*(\S+)\s*/;
+
 foswiki.readTransitionTriple = function (text)
 {
   if (text.trim() === "" || text.trim() === "..." || text.trim() === "…")
     return null;
-  var vals = text.split(" - ").map(foswiki.removeMarkup);
-  if (vals[0].trim() === "" && vals[1].trim() === "" &&
-    vals[2].trim() === "")
-    return null;
-  if (vals.length !== 3)
+
+  if(!tripleRegex.test(text)){
     foswiki.exc("Transition triple must contain "
-      + "3 hyphen-separated values but I got: " + text);
+        + "3 hyphen-separated values but I got: " + text);
+  }
+
+  var vals=tripleRegex.exec(text).slice(1,4).map(foswiki.removeMarkup);
 
   return [vals[0], vals[1], vals[2]];
 }
@@ -5093,7 +5095,7 @@ angular.module('turingmachine.js', []);
                 column: '=',
                 row: '='
             },
-            template: '<div ng-class="{\'cell-error\':cellError}"><input class="inline state-input" ng-maxlength="1" type="text" ng-model="data[0]" ng-model-options="{ debounce: 500 }"/>' +
+            template: '<div ng-class="{\'cell-error\':cellError}"><input class="inline state-input" ng-maxlength="1" type="text" ng-model="data[0]" ng-model-options="{ debounce: 500 }" />' +
             '<select ng-model="data[1]" class="state-movement">' +
             '<option></option>' +
             '<option>Stop</option>' +

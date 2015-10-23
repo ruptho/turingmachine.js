@@ -124,17 +124,19 @@ foswiki.readTable = function (tokenstream) {
   return table;
 };
 
+var tripleRegex=/\s*(\S)\s*-\s*(\S+)\s*-\s*(\S+)\s*/;
+
 foswiki.readTransitionTriple = function (text)
 {
   if (text.trim() === "" || text.trim() === "..." || text.trim() === "…")
     return null;
-  var vals = text.split(" - ").map(foswiki.removeMarkup);
-  if (vals[0].trim() === "" && vals[1].trim() === "" &&
-    vals[2].trim() === "")
-    return null;
-  if (vals.length !== 3)
+
+  if(!tripleRegex.test(text)){
     foswiki.exc("Transition triple must contain "
-      + "3 hyphen-separated values but I got: " + text);
+        + "3 hyphen-separated values but I got: " + text);
+  }
+
+  var vals=tripleRegex.exec(text).slice(1,4).map(foswiki.removeMarkup);
 
   return [vals[0], vals[1], vals[2]];
 }
